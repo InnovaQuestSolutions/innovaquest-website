@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+ // --accent: #E4CBFF;
+  --accent: #B2C6FE;
+  --accent-dark: hsl(269, 100%, 90%);
+ // --subtitle: #E4CBFF
+  --subtitle: #B2C6FE
+}
+
+/* Custom font */
+.font-space-grotesk {
+  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Background canvas */
+#bgCanvas {
+  background: linear-gradient(to bottom, #0a0b0c, #131415);
+}
+.bg-custom-gradient {
+  background: linear-gradient(to bottom, #0a0b0c, #131415);
+}
+/* Text animations */
+ .staggered-fade-in {
+  display: block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.8s ease forwards;
+}
+
+  /* HTML: <div class="loader"></div> */
+.loader {
+  width: 20px;
+  aspect-ratio: 4;
+  --_g: no-repeat radial-gradient(circle closest-side,var(--accent) 90%,#0000);
+  background: 
+    var(--_g) 0%   50%,
+    var(--_g) 50%  50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100%/3) 100%;
+  animation: l7 3s infinite linear;
+}
+@keyframes l7 {
+    33%{background-size:calc(100%/3) 0%  ,calc(100%/3) 100%,calc(100%/3) 100%}
+    50%{background-size:calc(100%/3) 100%,calc(100%/3) 0%  ,calc(100%/3) 100%}
+    66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
+}
+
+h1 span:nth-child(1) { animation-delay: 0.2s; }
+h1 span:nth-child(2) { animation-delay: 0.4s; }
+h1 span:nth-child(3) { animation-delay: 0.6s; }
+
+.scale-to-zoom {
+  transform: scale(1.5) ease 1s
+  
+}
+.scale-to-normal {
+  transform: scale(1) ease 1s
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Link hover effects */
+.secondary-button {
+    &:hover {
+        color: var(--accent);
+    }
+}
+ .secondary-button {
+
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--accent);
+    transition: width 0.3s ease;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+}
+.subtitle {
+  color: var(--subtitle);
+}
+.cta-button {
+  height: 2.5rem;
+  max-height: 2.5rem;
+  background: linear-gradient(to right,  #ffffff, var(--accent)) right;
+  background-size: 100%;
+    color: #131415;
+    //transition: 1s ease;
+    border: none;
+
+    &:hover {
+      background: linear-gradient(to left,  #ffffff, var(--accent)) left; 
+      transform: translateY(-5%);
+    }
+ 
+}
+/* Custom selection color */
+::selection {
+  background: var(--accent);
+  color: #0a0b0c;
+}
+
+/* Social icons animation */
+.social-icon {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+
+
+.zoom-on-hover {
+  cursor: pointer;
+  transition: 1.5s ease;
+  &:hover {
+    transform: scale(1.2);
+  }
+}
+
+
+.mobile-menu {
+  transition: all 1s ease;
+}

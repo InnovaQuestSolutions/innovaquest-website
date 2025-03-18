@@ -1,0 +1,43 @@
+---
+import Background from '../components/Background.astro'
+import Header from '../components/Header.astro'
+import Footer from '../components/molecules/Footer.astro'
+import '../styles/global.scss'
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+import { ClientRouter } from 'astro:transitions'
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="InnovaQuest - AEC Automation Solutions" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <ClientRouter fallback="none" />
+  </head>
+  <body class="bg-[#0a0b0c] font-space-grotesk text-white">
+    <Background />
+    <Header />
+    <slot />
+    <Footer />
+  </body>
+</html>

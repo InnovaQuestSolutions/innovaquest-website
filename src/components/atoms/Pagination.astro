@@ -1,0 +1,95 @@
+---
+// Pagination.astro
+interface Props {
+  currentPage: number
+  totalPages: number
+  baseUrl: string // e.g., "/blog"
+}
+
+const { currentPage, totalPages, baseUrl } = Astro.props
+
+// Generate page numbers to display
+const generatePageNumbers = (current: number, total: number) => {
+  const pages = []
+  const showAroundCurrent = 2 // How many pages to show before and after current
+
+  for (let i = 1; i <= total; i++) {
+    if (
+      i === 1 || // First page
+      i === total || // Last page
+      (i >= current - showAroundCurrent && i <= current + showAroundCurrent) // Pages around current
+    ) {
+      pages.push(i)
+    } else if (pages[pages.length - 1] !== '...') {
+      pages.push('...')
+    }
+  }
+  return pages
+}
+
+const pages = generatePageNumbers(currentPage, totalPages)
+---
+
+<nav
+  class="flex justify-center items-center space-x-2 my-8"
+  aria-label="Pagination"
+>
+  <!-- Previous button -->
+  <a
+    href={currentPage === 1 ? '#' : `${baseUrl}/${currentPage - 1}`}
+    class={`backdrop-blur-sm bg-black/50 relative inline-flex items-center px-3 py-2 text-sm border rounded-lg transition-colors ${
+      currentPage === 1
+        ? 'border-gray-500 text-gray-500 cursor-not-allowed'
+        : 'border-gray-500 text-white hover:border-[#B0BAFF] hover:text-[#B0BAFF]'
+    }`}
+    aria-disabled={currentPage === 1}
+  >
+    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+      <path
+        fill-rule="evenodd"
+        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+        clip-rule="evenodd"></path>
+    </svg>
+  </a>
+
+  <!-- Page numbers -->
+  {
+    pages.map(page =>
+      page === '...' ? (
+        <span class="px-4 py-2 text-gray-700 backdrop-blur-sm bg-black/50 border rounded-lg border-gray-700">
+          ...
+        </span>
+      ) : (
+        <a
+          href={page === 1 ? baseUrl : `${baseUrl}/${page}`}
+          class={`backdrop-blur-sm bg-black/50 relative inline-flex items-center px-4 py-2 text-sm border rounded-lg transition-colors ${
+            currentPage === page
+              ? 'bg-[#B0BAFF]/10 border-[#B0BAFF] text-[#B0BAFF]'
+              : 'border-gray-700 text-white hover:border-[#B0BAFF] hover:text-[#B0BAFF]'
+          }`}
+          aria-current={currentPage === page ? 'page' : undefined}
+        >
+          {page}
+        </a>
+      ),
+    )
+  }
+
+  <!-- Next button -->
+  <a
+    href={currentPage === totalPages ? '#' : `${baseUrl}/${currentPage + 1}`}
+    class={`backdrop-blur-sm bg-black/50 relative inline-flex items-center px-3 py-2 text-sm border rounded-lg transition-colors ${
+      currentPage === totalPages
+        ? 'border-gray-700 text-gray-500 cursor-not-allowed'
+        : 'border-gray-700 text-white hover:border-[#B0BAFF] hover:text-[#B0BAFF]'
+    }`}
+    aria-disabled={currentPage === totalPages}
+  >
+    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+      <path
+        fill-rule="evenodd"
+        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+        clip-rule="evenodd"></path>
+    </svg>
+  </a>
+</nav>

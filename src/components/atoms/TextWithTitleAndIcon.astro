@@ -1,0 +1,43 @@
+---
+import ImageWithDynamicallyImportedSrc from './ImageWithDynamicallyImportedSrc.astro'
+interface Props {
+  useImageWithDynamicallyImportedSrc?: boolean
+  title: string
+  description: string
+  icon: string
+  classes?: string[]
+}
+
+const {
+  title,
+  description,
+  icon,
+  classes,
+  useImageWithDynamicallyImportedSrc,
+} = Astro.props
+---
+
+<div
+  class:list={[
+    'flex items-start rounded-lg bg-black bg-opacity-40 backdrop-blur-sm',
+    classes && [...classes],
+  ]}
+>
+  {
+    useImageWithDynamicallyImportedSrc ? (
+      <ImageWithDynamicallyImportedSrc
+        imageName={icon}
+        alt={title}
+        width={25}
+        height={25}
+        classes={['mt-2']}
+      />
+    ) : (
+      <img src={icon} alt={title} width={25} height={25} class="mt-2" />
+    )
+  }
+  <div class="mx-4">
+    <h1 class="text-[1.2rem] font-bold subtitle mt-1">{title}</h1>
+    <p class="text-md text-gray-400 mt-2">{description}</p>
+  </div>
+</div>

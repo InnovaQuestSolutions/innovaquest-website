@@ -1,0 +1,73 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import CaseStudy from '../../components/atoms/CaseStudy.astro'
+import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
+import Background from '../../components/Background.astro'
+import Loader from '../../components/atoms/Loader.astro'
+import CaseStudyDetailed from '../../components/molecules/CaseStudyDetailed.astro'
+import Modal from '../../components/molecules/Modal.astro'
+import type { Asset, EntryFieldTypes } from 'contentful'
+import contentfulClient from '../../lib/contentful'
+export const prerender = false
+
+export interface CaseStudyType {
+  contentTypeId: 'case-study-content'
+  fields: {
+    companyName: EntryFieldTypes.Text
+    heroImage: Asset
+    shortDescription: EntryFieldTypes.Text
+    challengeOverview: EntryFieldTypes.Text
+    solutionOverview: EntryFieldTypes.Text
+    conclusionOverview: EntryFieldTypes.Text
+    architectureOverview?: EntryFieldTypes.Text
+    architectureOverviewImage?: Asset
+    resultsPercentageDisplay: EntryFieldTypes.Object
+    caseStudyTags: EntryFieldTypes.Object
+  }
+}
+const cases = await contentfulClient.getEntries<CaseStudyType, string>({
+  content_type: 'case-study-content',
+})
+---
+
+<script>
+  import { sectionScrollAnimation } from '../../gsapAnimations'
+  sectionScrollAnimation('cases', 'cases-animation')
+</script>
+
+<Layout>
+  <main
+    id="cases"
+    class="flex flex-col items-center h-fit min-h-screen pt-36 px-4 cases"
+  >
+    <DoubleSectionHeading
+      accentHeading="CASE STUDIES"
+      mainHeading="Our Projects"
+      animationClass="cases-animation"
+    />
+
+    <div class="flex flex-wrap justify-center gap-20 mt-10 w-11/12">
+      {
+        cases.items.map(
+          ({
+            sys: { id },
+            fields: { companyName, shortDescription, heroImage, caseStudyTags },
+          }) => (
+            <CaseStudy
+              item={{
+                title: companyName,
+                description: shortDescription,
+                tags: caseStudyTags as string[],
+                image: (heroImage as Asset).fields?.file?.url as string,
+                id,
+              }}
+            />
+          ),
+        )
+      }
+    </div>
+    <Modal id="cases-modal" server:defer slot="fallback">
+      <CaseStudyDetailed />
+    </Modal>
+  </main>
+</Layout>

@@ -1,0 +1,16 @@
+---
+interface Props {
+  animationClass?: string
+}
+
+const { animationClass } = Astro.props
+---
+
+<h1
+  class:list={[
+    'subtitle text-[2rem] md:text-[3.5rem] font-bold leading-none tracking-wide text-center',
+    `${animationClass ? animationClass : null}`,
+  ]}
+>
+  <slot />
+</h1>

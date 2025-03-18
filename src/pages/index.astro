@@ -1,16 +1,25 @@
 ---
+import Layout from '../layouts/Layout.astro'
+import Hero from '../components/Hero.astro'
+import SocialLinks from '../components/atoms/SocialLinks.astro'
+import Services from '../components/sections/Services.astro'
 
+import AutomationPitch from '../components/sections/AutomationPitch.astro'
+import HowItWorks from '../components/sections/HowItWorks.astro'
+import FAQ from '../components/sections/FAQ.astro'
+import Pricing from '../components/sections/Pricing.astro'
+import Loader from '../components/atoms/Loader.astro'
+import Reviews from '../components/sections/Reviews.astro'
+import Background from '../components/Background.astro'
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="InnovaQuest - AEC Automation Solutions">
+  <Hero />
+  <SocialLinks />
+  <AutomationPitch />
+  <Reviews />
+  <Services />
+  <HowItWorks />
+  <Pricing />
+  <FAQ />
+</Layout>

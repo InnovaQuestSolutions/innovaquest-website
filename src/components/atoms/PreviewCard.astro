@@ -1,0 +1,80 @@
+---
+import type { Asset, EntryFieldTypes } from 'contentful'
+
+export interface previewCardPropsType {
+  id: string
+  item: {
+    image: Asset
+    author: EntryFieldTypes.Text
+    title: EntryFieldTypes.Text
+    article: EntryFieldTypes.RichText
+    tags: EntryFieldTypes.Object
+    date: EntryFieldTypes.Date
+    description: EntryFieldTypes.Text
+  }
+
+  modalId?: string
+  animationClass?: string
+}
+
+const {
+  id,
+  item: { title, description, image, tags, date },
+  animationClass,
+} = Astro.props
+---
+
+<script>
+  import { modalIsOpenWithId } from '../../stores/modalStore'
+  const setModalIsOpen = () => modalIsOpenWithId.set({ id: '' })
+  document
+    .querySelectorAll('.modal-trigger-image')
+    .forEach(node => node.addEventListener('click', setModalIsOpen))
+</script>
+<div
+  class:list={[
+    'flex flex-col justify-between cases-animation rounded-lg bg-black bg-opacity-30 h-[475px] md:h-[525px] w-96 lg:w-[500px] backdrop-blur-sm',
+    animationClass ? animationClass : null,
+  ]}
+>
+  <div
+    class:list={[
+      'relative rounded-lg flex min-h-60 max-h-60 md:min-h-72 md:max-h-72 overflow-hidden w-full modal-trigger-image',
+    ]}
+  >
+    <a href=`/blog/${id}`>
+      <img
+        src={image.fields?.file?.url}
+        alt={title}
+        class="absolute top-0 left-0 zoom-on-hover scale-110 w-full"
+      />
+    </a>
+  </div>
+
+  <div
+    class="px-6 pb-6 flex flex-col justify-start items-start gap-4 max-h-full"
+  >
+    <div class="flex justify-between items-end w-full">
+      <p class="text-sm text-gray-400 mt-4">
+        {new Date(date).toLocaleDateString()}
+      </p>
+      <a
+        href=`/blog/${id}`
+        class="text-sm secondary-button"
+        id="modal-trigger-btn">Read More</a
+      >
+    </div>
+    <p class="text-md mt-2">{description}</p>
+    <h1 class="text-[1rem] font-bold subtitle max-w-80">{title}</h1>
+
+    <div class="flex justify-start items-center w-full mt-4 gap-4">
+      {
+        tags.map((tag: string) => (
+          <span class="border border-gray-700 rounded-full p-2 min-w-32 w-fit text-center text-xs text-gray-400">
+            {tag}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+</div>

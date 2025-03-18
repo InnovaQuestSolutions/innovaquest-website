@@ -1,0 +1,13 @@
+---
+interface Props {
+  animationClass?: string
+}
+const { animationClass } = Astro.props
+---
+
+<button
+  class:list={[
+    'justify-self-end border border-[#B2C6FE] rounded-lg p-2 text-[#B2C6FE] w-[175px] cta-button',
+    animationClass ? animationClass : null,
+  ]}>Book A Call</button
+>

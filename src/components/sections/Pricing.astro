@@ -1,0 +1,88 @@
+---
+import type { EntryFieldTypes } from 'contentful'
+import ContainerWithBorder from '../atoms/ContainerWithBorder.astro'
+import CtaButton from '../atoms/CtaButton.astro'
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+import ImageWithDynamicallyImportedSrc from '../atoms/ImageWithDynamicallyImportedSrc.astro'
+
+import SectionSubtitle from '../atoms/SectionSubtitle.astro'
+import contentfulClient from '../../lib/contentful'
+
+export interface PricingModelType {
+  contentTypeId: 'pricing-model-content'
+  fields: {
+    modelTypeTitle: EntryFieldTypes.Text
+    modelTagline: EntryFieldTypes.Text
+    threeModelBenefits: EntryFieldTypes.Object
+    ctaButtonText: EntryFieldTypes.Text
+  }
+}
+
+const models = await contentfulClient.getEntries<PricingModelType>({
+  content_type: 'pricing-model-content',
+})
+---
+
+<script>
+  import { sectionScrollAnimation } from '../../gsapAnimations'
+  sectionScrollAnimation('pricing', 'pricing-animation')
+</script>
+
+<main
+  id="pricing"
+  class="flex flex-col justify-center items-center min-h-screen h-fit pt-16 px-4 pricing"
+>
+  <DoubleSectionHeading
+    accentHeading="OUR MODELS"
+    mainHeading="Partnerships & Pricing"
+    animationClass="pricing-animation"
+  />
+
+  <SectionSubtitle animationClass="pricing-animation">
+    We create seamless flows that save businesses hundreds of hours, improve
+    conversion and modernise processes.
+  </SectionSubtitle>
+  <div
+    class="flex flex-col lg:flex-row gap-6 w-9/12 justify-center items-center mt-12"
+  >
+    {
+      models.items.map(
+        ({
+          fields: {
+            modelTypeTitle,
+            modelTagline,
+            threeModelBenefits,
+            ctaButtonText,
+          },
+        }) => (
+          <ContainerWithBorder
+            classes={[
+              'flex flex-col items-center justify-center gap-6 w-80 h-[450px] p-6 pricing-animation',
+            ]}
+          >
+            <h1 class="text-[1.3rem] font-bold text-center subtitle">
+              {modelTypeTitle}
+            </h1>
+            <p class="text-md text-gray-400 w-full text-center">
+              {modelTagline}
+            </p>
+            <div class="flex flex-col items-start justify-center gap-2">
+              {(threeModelBenefits as string[]).map((benefit: string) => (
+                <div class="flex justify-between items-start gap-3">
+                  <ImageWithDynamicallyImportedSrc
+                    imageName={'tickNoBorder.png'}
+                    alt={'challenge'}
+                    width={25}
+                    height={25}
+                  />
+                  <p class="text-md  w-full">{benefit}</p>
+                </div>
+              ))}
+            </div>
+            <CtaButton>{ctaButtonText} </CtaButton>
+          </ContainerWithBorder>
+        ),
+      )
+    }
+  </div>
+</main>

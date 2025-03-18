@@ -1,0 +1,84 @@
+---
+import type { Asset, EntryFieldTypes } from 'contentful'
+import { contentfulClient } from '../../lib/contentful'
+import Layout from '../../layouts/Layout.astro'
+import { withRichTextRenderConfig } from './rich-text-renderer-with-config'
+import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
+
+export interface BlogArticleType {
+  contentTypeId: 'blogArticle'
+  fields: {
+    image: Asset
+    author: EntryFieldTypes.Text
+    title: EntryFieldTypes.Text
+    article: EntryFieldTypes.RichText
+    tags: EntryFieldTypes.Object
+    date: EntryFieldTypes.Date
+    description: EntryFieldTypes.Text
+  }
+}
+const { id } = Astro.props
+
+const blogArticle = await contentfulClient.getEntries<BlogArticleType, string>({
+  content_type: 'blogArticle',
+  'sys.id': id,
+})
+
+const {
+  fields: { image, author, title, article, tags, date, description },
+} = blogArticle.items[0]
+---
+
+<Layout title="InnovaQuest - AEC Automation Solutions">
+  <main
+    id="blog"
+    class="relative flex flex-col items-center justify-between gap-10 min-h-fit py-36 px-8 blog"
+  >
+    <div
+      class="flex flex-col justify-evenly items-center md:flex-row md:items-start w-full gap-6"
+    >
+      <div class="w-full md:w-9/12 flex flex-col items-start gap-10">
+        <DoubleSectionHeading
+          animationClass="fade-in"
+          accentHeading="ARTICLE"
+          mainHeading={title}
+        />
+
+        <div class="h-54 md:h-fit w-full flex justify-between items-start">
+          <p class="text-center text-sm tracking-wider font-bold">
+            {new Date(date).toLocaleDateString()}
+          </p>
+          <p class="text-center text-sm tracking-wider font-bold w-1/2">
+            {description}
+          </p>
+          <p class="text-center text-sm tracking-wider font-bold">
+            by {author}
+          </p>
+        </div>
+        <div
+          class="relative w-full min-h-60 max-h-60 md:min-h-96 md:max-h-96 overflow-hidden rounded-md"
+        >
+          <img
+            src={`${(image as Asset).fields?.file?.url}`}
+            alt={'industry'}
+            class={'absolute md:-top-36 w-full animated-heading'}
+          />
+        </div>
+        <div
+          class="flex flex-col md:flex-row justify-center items-center w-full gap-4"
+        >
+          {
+            (tags as string[]).map((tag: string) => (
+              <span class="border border-gray-600 rounded-full p-3 min-w-52 w-fit text-center text-xs md:text-sm font-bold bg-black bg-opacity-30 backdrop-blur-sm">
+                {tag}
+              </span>
+            ))
+          }
+        </div>
+        <div>
+          <article set:html={withRichTextRenderConfig(article)} />
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>

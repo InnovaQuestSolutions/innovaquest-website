@@ -1,0 +1,51 @@
+---
+// SearchBar.astro
+interface Props {
+  placeholder?: string
+  animationClass?: string
+}
+
+const { placeholder = 'Search...', animationClass } = Astro.props
+---
+
+<div
+  class:list={[
+    'w-9/12 lg:w-6/12 mx-auto',
+    animationClass ? animationClass : null,
+  ]}
+>
+  <div class="relative">
+    <input
+      type="text"
+      class="w-full bg-black/50 backdrop-blur-sm border border-gray-700 rounded-lg py-3 px-4 pl-11 text-white placeholder-gray-400 focus:outline-none focus:border-[#B0BAFF] focus:ring-1 focus:ring-[#B0BAFF] transition-colors"
+      placeholder={placeholder}
+    />
+    <div
+      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+    >
+      <svg
+        class="h-5 w-5 text-gray-400"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add search functionality
+  const searchInput = document.querySelector('input[type="text"]')
+  searchInput?.addEventListener('input', e => {
+    const target = e.target as HTMLInputElement
+    const searchTerm = target.value.toLowerCase()
+    // Add your search logic here
+  })
+</script>

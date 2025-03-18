@@ -1,0 +1,51 @@
+---
+import type { EntryFieldTypes } from 'contentful'
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+import TextWithTitle from '../atoms/TextWithTitle.astro'
+import contentfulClient from '../../lib/contentful'
+
+export interface MethodologyType {
+  contentTypeId: 'methodology'
+  fields: {
+    methodologyContent: EntryFieldTypes.Object
+  }
+}
+
+const methodology = await contentfulClient.getEntries<MethodologyType>({
+  content_type: 'methodology',
+})
+const methodologyContent = methodology.items[0].fields.methodologyContent
+---
+
+<script>
+  import { sectionScrollAnimation } from '../../gsapAnimations'
+  sectionScrollAnimation('method', 'method-animation')
+</script>
+
+<main
+  id="method"
+  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-16 method"
+>
+  <DoubleSectionHeading
+    accentHeading="OUR PROCESS"
+    mainHeading="How it Works"
+    animationClass="method-animation"
+  />
+
+  <div class="flex flex-wrap justify-center w-full mt-4 md:gap-10">
+    {
+      (methodologyContent as { [k: string]: string }[]).map(
+        ({ title, description }, index) => (
+          <TextWithTitle
+            title={title}
+            description={description}
+            index={index}
+            classes={[
+              'method-animation p-6 m-2 min-w-full lg:min-w-[525px] lg:max-w-[525px] h-48 border-none',
+            ]}
+          />
+        ),
+      )
+    }
+  </div>
+</main>

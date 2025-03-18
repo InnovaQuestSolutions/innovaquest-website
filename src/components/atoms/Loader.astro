@@ -1,0 +1,117 @@
+---
+// LoadingTorus.astro
+---
+
+<div class="flex flex-col items-center justify-center w-full">
+  <div id="loading-container" class="w-80 h-80">
+    <canvas id="loading-canvas" class="w-full h-full"></canvas>
+  </div>
+  <div
+    class="text-[1rem] font-bold text-center subtitle tracking-wider loading flex items-center justify-between"
+  >
+    Loading<div class="loader mx-1"></div>
+  </div>
+</div>
+<script>
+  import * as THREE from 'three'
+
+  const container = document.getElementById('loading-container')
+  const canvas = document.getElementById('loading-canvas')
+
+  if (container && canvas) {
+    // Scene setup
+    const scene = new THREE.Scene()
+
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000)
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: true,
+    })
+
+    renderer.setSize(128, 128)
+    renderer.setPixelRatio(window.devicePixelRatio)
+
+    // Add lights for MeshStandardMaterial
+    const centerPointLight = new THREE.PointLight(0xfffff, 10, 10) // Additional colored light
+    centerPointLight.position.set(0, 0, 5)
+    scene.add(centerPointLight)
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5) // Increased ambient light
+    scene.add(ambientLight)
+
+    // Add subtle hemisphere light for better overall illumination
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x9d8cff, 0.5)
+    scene.add(hemisphereLight)
+
+    // Create torus knot with specified geometry and material
+    const geometry = new THREE.TorusKnotGeometry(8, 3.5, 100, 16, 2, 3)
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xfffff,
+      metalness: 0.95,
+      roughness: 0.8,
+      emissive: 0x002200,
+      wireframe: true,
+      wireframeLinewidth: 1,
+    })
+
+    const torusKnot = new THREE.Mesh(geometry, material)
+    scene.add(torusKnot)
+
+    // Adjust camera position for better view of the knot
+    camera.position.z = 30
+
+    // Animation variables
+    let frame = 0
+    const baseScale = 1
+    const pulseAmount = 0.15
+    const pulseSpeed = 0.02
+    torusKnot.rotation.x = 0.5
+    torusKnot.rotation.y = 0.5
+
+    function animate() {
+      requestAnimationFrame(animate)
+
+      // Rotate torus knot
+
+      torusKnot.rotation.x += 0.002
+      torusKnot.rotation.y += 0.003
+      torusKnot.rotation.z += 0.001
+
+      torusKnot.rotation.x = 0
+      torusKnot.rotation.y = 0
+
+      // Subtle pulsing effect
+      const scale = baseScale + Math.sin(frame * pulseSpeed) * pulseAmount
+      torusKnot.scale.set(scale, scale, scale)
+
+      // Animate material properties
+      material.emissiveIntensity = 0.01 + Math.sin(frame * pulseSpeed) * 0.2
+
+      frame++
+      renderer.render(scene, camera)
+    }
+
+    animate()
+
+    // Handle resize
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width
+        const height = entry.contentRect.height
+        renderer.setSize(width, height)
+        camera.aspect = width / height
+        camera.updateProjectionMatrix()
+      }
+    })
+
+    resizeObserver.observe(container)
+
+    // Cleanup on component unmount
+    //Is this getting cleaned up automatically when els get removed from DOM?
+    /*resizeObserver.disconnect()
+      geometry.dispose()
+      material.dispose()
+     renderer.dispose()*/
+  }
+</script>

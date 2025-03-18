@@ -1,0 +1,77 @@
+---
+import type { Asset, EntryFieldTypes } from 'contentful'
+
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+
+import Testimonial from '../molecules/Testimonial.astro'
+import contentfulClient from '../../lib/contentful'
+const testimonials = [
+  {
+    clientName: 'Hayder Alemara',
+    companyName: 'Example',
+    companyLogo: 'logo_1.png',
+    endorsement: `Johnny and the team have done an incredible job automating some of our critical workflows! We've learned so much from them about streamlining the business, they're truly experts in their field. `,
+    rating: 5,
+  },
+  {
+    clientName: 'Michelle Car',
+    companyName: 'Example',
+    companyLogo: 'logo_2.png',
+    endorsement: `Johnny and the team have done an incredible job automating some of our critical workflows! We've learned so much from them about streamlining the business, they're truly experts in their field. `,
+    rating: 5,
+  },
+  {
+    clientName: 'Tim Something',
+    companyName: 'Example',
+    companyLogo: 'logo_3.png',
+    endorsement: `Johnny and the team have done an incredible job automating some of our critical workflows! We've learned so much from them about streamlining the business, they're truly experts in their field. `,
+    rating: 5,
+  },
+]
+export interface TestimonialsType {
+  contentTypeId: 'testimonial-content'
+  fields: {
+    clientLogo: Asset
+    clientName: EntryFieldTypes.Text
+    clientCompanyName: EntryFieldTypes.Text
+    clientEndorsement: EntryFieldTypes.Text
+    jobRating: EntryFieldTypes.Number
+  }
+}
+
+const reviews = await contentfulClient.getEntries<TestimonialsType>({
+  content_type: 'testimonial-content',
+})
+---
+
+<script>
+  import { sectionScrollAnimation, showCtaOnScroll } from '../../gsapAnimations'
+  sectionScrollAnimation('reviews', 'reviews-animation')
+  showCtaOnScroll('reviews')
+</script>
+
+<main
+  id="reviews"
+  class="flex flex-col justify-evenly items-center min-h-screen h-fit px-6 pt-16 reviews"
+>
+  <DoubleSectionHeading
+    accentHeading="SUCCESS STORIES"
+    mainHeading="From Our Partners"
+    animationClass="reviews-animation"
+  />
+
+  <div
+    class="flex flex-col mt-12 md:mt-0 gap-10 md:flex-row justify-center items-center w-full"
+  >
+    {
+      reviews.items.map(item => {
+        return (
+          <Testimonial
+            testimonialContent={item.fields}
+            classes="reviews-animation"
+          />
+        )
+      })
+    }
+  </div>
+</main>

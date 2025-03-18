@@ -1,0 +1,60 @@
+---
+import type { Asset, EntryFieldTypes } from 'contentful'
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+import SectionSubtitle from '../atoms/SectionSubtitle.astro'
+import TextWithTitleAndIcon from '../atoms/TextWithTitleAndIcon.astro'
+import contentfulClient from '../../lib/contentful'
+
+export interface ServiceExampleType {
+  contentTypeId: 'serviceExample'
+  fields: {
+    serviceIcon: Asset
+    serviceTitle: EntryFieldTypes.Text
+    serviceDescription: EntryFieldTypes.Text
+  }
+}
+
+const services = await contentfulClient.getEntries<ServiceExampleType>({
+  content_type: 'serviceExample',
+})
+---
+
+<script>
+  import { sectionScrollAnimation } from '../../gsapAnimations'
+  sectionScrollAnimation('service', 'services-animation')
+</script>
+
+<main
+  id="services"
+  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-16 service"
+>
+  <DoubleSectionHeading
+    accentHeading="EXPERTLY CRAFTED"
+    mainHeading="Custom Solutions"
+    animationClass="services-animation"
+  />
+
+  <SectionSubtitle animationClass="services-animation">
+    We create seamless flows that save businesses hundreds of hours, improve
+    conversion and modernise processes.
+    <br />
+     Here are some of our services.
+  </SectionSubtitle>
+  <div class="flex flex-wrap justify-center w-full mt-4 gap-8">
+    {
+      services.items.map(({ fields }) => {
+        const icon: Asset = fields.serviceIcon
+        return (
+          <TextWithTitleAndIcon
+            icon={`${icon?.fields?.file?.url}`}
+            title={fields.serviceTitle}
+            description={fields.serviceDescription}
+            classes={[
+              'services-animation p-6 m-2 lg:m-6 w-full md:min-w-96 md:max-w-96 h-48',
+            ]}
+          />
+        )
+      })
+    }
+  </div>
+</main>

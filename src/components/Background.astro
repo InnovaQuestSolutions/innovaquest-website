@@ -1,0 +1,132 @@
+---
+
+---
+
+<canvas id="bgCanvas" class="fixed top-0 left-0 w-full h-full -z-10"></canvas>
+
+<script>
+  import * as THREE from 'three'
+
+  let scene: THREE.Scene,
+    camera: THREE.PerspectiveCamera,
+    renderer: THREE.WebGLRenderer,
+    torus: THREE.Mesh
+
+  function initThree() {
+    scene = new THREE.Scene()
+    camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    )
+
+    const canvas = document.querySelector('#bgCanvas') as HTMLCanvasElement
+    renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+    })
+
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    // Modified geometry parameters for more angular look
+    const geometry = new THREE.TorusKnotGeometry(8, 3.5, 100, 16, 2, 3)
+
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xfffff,
+      metalness: 0.95,
+      roughness: 0.8,
+      emissive: 0x002200,
+      wireframe: true,
+      wireframeLinewidth: 0.1,
+    })
+
+    torus = new THREE.Mesh(geometry, material)
+    scene.add(torus)
+
+    const centerPointLight = new THREE.PointLight(0xfffff, 20, 20) // Additional colored light
+    centerPointLight.position.set(0, 0, 5)
+    scene.add(centerPointLight)
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 3) // Increased ambient light
+    scene.add(ambientLight)
+
+    // Add subtle hemisphere light for better overall illumination
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x9d8cff, 0.9)
+    scene.add(hemisphereLight)
+
+    camera.position.z = 30
+
+    // Add slight rotation to initial position
+    torus.rotation.x = 0.5
+    torus.rotation.y = 0.5
+  }
+
+  let mouseX = 0
+  let mouseY = 0
+  let targetRotationX = 0
+  let targetRotationY = 0
+
+  let animationId: number
+  function animate() {
+    animationId = requestAnimationFrame(animate)
+
+    // Smoother rotation
+    torus.rotation.x += 0.002
+    torus.rotation.y += 0.003
+    torus.rotation.z += 0.001
+
+    // Smooth mouse movement interpolation
+    targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1
+    targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1
+
+    torus.rotation.x = targetRotationY
+    torus.rotation.y = targetRotationX
+
+    renderer.render(scene, camera)
+  }
+
+  function onWindowResize() {
+    if (camera && renderer) {
+      camera.aspect = window.innerWidth / window.innerHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(window.innerWidth, window.innerHeight)
+    }
+  }
+
+  function onMouseMove(event: MouseEvent) {
+    mouseX = event.clientX - window.innerWidth / 2
+    mouseY = event.clientY - window.innerHeight / 2
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    initThree()
+    animate()
+
+    window.addEventListener('resize', onWindowResize)
+    window.addEventListener('mousemove', onMouseMove)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', onWindowResize)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
+  })
+  document.addEventListener('astro:after-swap', () => {
+    initThree()
+    cancelAnimationFrame(animationId)
+    animate()
+
+    window.addEventListener('resize', onWindowResize)
+    window.addEventListener('mousemove', onMouseMove)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', onWindowResize)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
+  })
+</script>

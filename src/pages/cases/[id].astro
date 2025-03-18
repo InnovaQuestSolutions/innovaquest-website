@@ -1,0 +1,140 @@
+---
+import type { Asset, EntryFieldTypes } from 'contentful'
+import ContainerWithBorder from '../../components/atoms/ContainerWithBorder.astro'
+import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
+import ImageWithDynamicallyImportedSrc from '../../components/atoms/ImageWithDynamicallyImportedSrc.astro'
+
+import ProgressCircle from '../../components/atoms/ProgressCircle.astro'
+import SectionHeading from '../../components/atoms/SectionHeading.astro'
+import contentfulClient from '../../lib/contentful'
+import { type CaseStudyType } from './index.astro'
+import Layout from '../../layouts/Layout.astro'
+
+
+const { id } = Astro.props
+
+const caseStudy = await contentfulClient.getEntries<CaseStudyType, string>({
+        content_type: 'case-study-content',
+        "sys.id": id,
+       })
+       
+const {fields: {
+        companyName,
+        shortDescription,
+        heroImage,
+        challengeOverview,
+        solutionOverview,
+        conclusionOverview,
+        architectureOverview,
+        architectureOverviewImage,
+        resultsPercentageDisplay,
+      } } = caseStudy.items[0] 
+
+
+const sections = [
+          { title: 'Challenge', content: challengeOverview },
+          { title: 'Solution', content: solutionOverview },
+          { title: 'Conclusion', content: conclusionOverview },
+        ]
+---
+
+<Layout title="InnovaQuest - AEC Automation Solutions">
+  <div
+    class="flex flex-col justify-evenly items-center md:flex-row md:items-start w-full gap-6 px-10 py-36"
+  >
+    <div class="md:hidden">
+        <DoubleSectionHeading
+        accentHeading="CASE STUDY"
+        mainHeading={companyName}
+        animationClass="animated-heading text-start"
+      />
+      <div
+        class="relative w-full min-h-60 max-h-60 overflow-hidden rounded-md my-10"
+      >
+        <ImageWithDynamicallyImportedSrc
+          imageName={'industry.png'}
+          alt={'industry'}
+          classes={['absolute w-full animated-heading']}
+        />
+      </div>
+   
+
+      <p class="text-md text-gray-300 font-bold w-full mt-8">
+        {shortDescription}
+      </p>
+    </div>
+
+    <ContainerWithBorder
+      classes={[
+        'flex flex-col justify-center items-center w-9/12 gap-4 p-6 h-fit md:sticky md:top-40 md:w-2/12 md:mb-12',
+      ]}
+    >
+      <h1 class="text-[1rem] font-bold text-center subtitle">Results</h1>
+
+      {
+        (resultsPercentageDisplay as {[k: string]: string | number}[]).map((result: {[k: string]: string | number}, index: number) => (
+          <div class="flex flex-col items-center justify-center max-w-80 ">
+            <ProgressCircle
+              isModalChild={true}
+              percentage={result.percentage as number}
+              index={index}
+            />
+            <p class="text-md text-gray-300 mt-2 max-w-56 text-center">
+              {result.description}
+            </p>
+          </div>
+        ))
+      }
+    </ContainerWithBorder>
+    <div class="w-full md:w-9/12 flex flex-col items-start gap-10">
+        <div class="hidden md:block">
+            <DoubleSectionHeading
+              accentHeading="CASE STUDY"
+              mainHeading={companyName}
+              animationClass="animated-heading text-start"
+            />
+          </div>
+      <div
+        class="hidden md:block relative w-full min-h-60 max-h-60 overflow-hidden rounded-lg"
+      >
+        <img
+          src={`${(heroImage as Asset).fields?.file?.url}`}
+          alt={'industry'}
+          class='absolute w-full animated-heading lg:-top-36'
+        />
+      </div>
+     
+
+      <p class="text-md text-gray-300 font-bold w-full hidden md:block">
+        {shortDescription}
+      </p>
+      {
+        sections.map(section => (
+          <>
+            <div class="flex justify-between items-start gap-3">
+              <ImageWithDynamicallyImportedSrc
+                imageName={'service.png'}
+                alt={'challenge'}
+                width={25}
+                height={25}
+              />
+              <h1 class="text-[1rem] font-bold text-center animated-heading">
+                {section.title}
+              </h1>
+            </div>
+            <p class="text-md text-gray-300 mt-2 w-full">{section.content}</p>
+          </>
+        ))
+      }
+     {architectureOverview && <SectionHeading>Architecture Overview</SectionHeading>
+      <p class="text-md text-gray-300 mt-2 w-full font-bold">
+       {architectureOverview}
+      </p>
+      <img
+        src={architectureOverviewImage}
+        alt={'architecture'}
+        class='w-full rounded-lg mb-10'
+      />}
+    </div>
+  </div>
+</Layout>

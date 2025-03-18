@@ -1,0 +1,53 @@
+---
+import Layout from '../layouts/Layout.astro'
+import FounderInfoBlock from '../components/atoms/FounderInfoBlock.astro'
+import SectionHeading from '../components/atoms/SectionHeading.astro'
+
+const founders = [
+  {
+    image: 'founder.png',
+    name: 'Johnny Gecz',
+    credentials: [
+      'Techincal Founder',
+      'Structural Engineer',
+      'Automations Expert',
+    ],
+    humanisingAspect: 'Loves cats & coffee',
+  },
+  {
+    image: 'founder.png',
+    name: 'Andre Vulpe',
+    credentials: [
+      'Founding Engineer',
+      'Software Engineer',
+      'Automations Specialist',
+    ],
+    humanisingAspect: 'Randomly likes to do a cockney impression',
+  },
+]
+---
+
+<script>
+  import { sectionScrollAnimation, showCtaOnScroll } from '../gsapAnimations'
+  sectionScrollAnimation('about', 'about-animation')
+</script>
+<Layout title="InnovaQuest - AEC Automation Solutions">
+  <main
+    id="about"
+    class="flex flex-col items-center justify-center min-h-screen h-fit pt-16 px-8 about"
+  >
+    <SectionHeading animationClass="about-animation">Who We Are</SectionHeading>
+
+    <div
+      class="flex flex-wrap lg:flex-nowrap lg:p-20 lg:mt-0 mt-4 justify-center items-center gap-10"
+    >
+      <div class="flex-col gap-10 w-xl">
+        {
+          founders.map((item, index) => (
+            <FounderInfoBlock founderInfo={item} index={index} />
+          ))
+        }
+      </div>
+    </div>
+  </main>
+</Layout>

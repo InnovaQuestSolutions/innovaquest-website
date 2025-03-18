@@ -1,0 +1,64 @@
+---
+// BurgerMenu.astro
+
+import BookACall from './BookACall.astro'
+
+const { navItems } = Astro.props
+---
+
+<div class="absolute left-10 top-7 lg:hidden">
+  <button id="burger-btn" class="p-2">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        id="burger-icon"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M4 6h16M4 12h16M4 18h16"></path>
+      <path
+        id="close-icon"
+        class="hidden"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M6 18L18 6M6 6l12 12"></path>
+    </svg>
+  </button>
+
+  <nav
+    id="mobile-menu"
+    class="hidden fixed top-20 left-0 right-0 bg-black p-4 h-full"
+  >
+    <div class="flex flex-col items-center justify-center gap-10 p-20">
+      {
+        navItems.map(({ href, label }: { href: string; label: string }) => (
+          <a
+            href={href}
+            class="text-gray-400 hover:text-[#B2C6FE] transition-colors secondary-button max-w-fit"
+          >
+            {label}
+          </a>
+        ))
+      }
+      <BookACall />
+    </div>
+  </nav>
+</div>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const burgerBtn = document.getElementById('burger-btn')
+    const mobileMenu = document.getElementById('mobile-menu')
+    const burgerIcon = document.getElementById('burger-icon')
+    const closeIcon = document.getElementById('close-icon')
+
+    const toggleMenu = () => {
+      mobileMenu?.classList.toggle('hidden')
+      burgerIcon?.classList.toggle('hidden')
+      closeIcon?.classList.toggle('hidden')
+    }
+
+    burgerBtn?.addEventListener('click', toggleMenu)
+    mobileMenu?.addEventListener('click', toggleMenu)
+  })
+</script>

@@ -1,0 +1,38 @@
+---
+import SectionHeading from '../atoms/SectionHeading.astro'
+import FAQAccordian from '../molecules/FAQAccordian.astro'
+import { contentfulClient } from '../../lib/contentful'
+import type { EntryFieldTypes } from 'contentful'
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+
+export interface FAQsType {
+  contentTypeId: 'faqs'
+  fields: {
+    faqsArray: EntryFieldTypes.Object
+  }
+}
+
+const faqs = await contentfulClient.getEntries<FAQsType>({
+  content_type: 'faqs',
+})
+---
+
+<script>
+  import { sectionScrollAnimation } from '../../gsapAnimations'
+  sectionScrollAnimation('faq', 'faq-animation')
+</script>
+
+<main
+  id="faq"
+  class="flex flex-col justify-center items-center min-h-screen h-fit pt-16 px-4 faq"
+>
+  <DoubleSectionHeading
+    accentHeading="FAQs"
+    mainHeading="Frequently Asked Questions"
+    animationClass="faq-animation"
+  />
+  <FAQAccordian
+    faqs={faqs.items[0].fields.faqsArray as { [k: string]: string }[]}
+    animationClass="faq-animation"
+  />
+</main>

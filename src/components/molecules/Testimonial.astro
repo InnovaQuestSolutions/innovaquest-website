@@ -1,0 +1,67 @@
+---
+import type { Asset, ChainModifiers } from 'contentful'
+import ContainerWithBorder from '../atoms/ContainerWithBorder.astro'
+import ImageWithDynamicallyImportedSrc from '../atoms/ImageWithDynamicallyImportedSrc.astro'
+
+interface Props {
+  classes?: string
+  testimonialContent: {
+    clientLogo: Asset
+    clientName: string
+    clientCompanyName: string
+    clientEndorsement: string
+    jobRating: number
+  }
+}
+
+const {
+  classes,
+  testimonialContent: {
+    clientLogo,
+    clientName,
+    clientCompanyName,
+    clientEndorsement,
+    jobRating,
+  },
+} = Astro.props
+
+let r = jobRating
+const ratingArray = []
+while (r > 0) {
+  ratingArray.push('star')
+  r--
+}
+---
+
+<ContainerWithBorder
+  classes={[
+    'flex flex-col gap-6 justify-center items-center py-6 w-96 h-[425px] pointer',
+    classes ? classes : '',
+  ]}
+>
+  <img src={`${clientLogo?.fields?.file?.url}`} alt="company logo" width={90} />
+  <div class="flex justify-center gap-2 items-center w-full">
+    <h1 class="text-md text-gray-400 text-center subtitle">
+      {clientName}
+    </h1>
+    <div class="border-r border-gray-600 h-3"></div>
+    <h1 class="text-md font-bold text-gray-400 text-center subtitle">
+      {clientCompanyName}
+    </h1>
+  </div>
+  {/*<div class="border-r border-gray-600 h-16"></div>*/}
+  <div class="flex items-center justify-center gap-2 w-1/2">
+    {
+      ratingArray.map(star => (
+        <ImageWithDynamicallyImportedSrc
+          imageName={'purple_star.png'}
+          alt="rating"
+          width={20}
+        />
+      ))
+    }
+  </div>
+  <p class="text-gray-400 text-md text-center w-10/12 italic">
+    {clientEndorsement}
+  </p>
+</ContainerWithBorder>

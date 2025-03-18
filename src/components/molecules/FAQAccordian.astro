@@ -1,0 +1,95 @@
+---
+// FAQ.astro
+import { string } from 'astro:schema'
+import type { EntryFieldTypes, ContentfulCollection, Entry } from 'contentful'
+export interface FAQsType {
+  contentTypeId: 'faqs'
+  fields: {
+    faqsArray: NonNullable<EntryFieldTypes.Object>
+  }
+}
+interface Props {
+  faqs: { [k: string]: string }[]
+
+  animationClass?: string
+}
+
+const { faqs, animationClass } = Astro.props
+---
+
+<div class="w-full max-w-4xl mx-auto p-6">
+  <div class="space-y-4">
+    {
+      faqs.map(
+        ({ question, answer }: { [k: string]: string }, index: number) => (
+          <div
+            class:list={[
+              'border border-gray-700 rounded-lg bg-black/50 backdrop-blur-sm',
+              animationClass && `${animationClass}`,
+            ]}
+          >
+            <button
+              class="w-full px-6 py-4 text-left flex justify-between items-center text-white hover:text-[#B0BAFF] transition-colors"
+              data-accordion={index}
+            >
+              <span>{question}</span>
+              <svg
+                class="w-6 h-6 transform transition-transform duration-200"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div
+              class="max-h-0 overflow-hidden transition-all duration-300"
+              data-content={index}
+            >
+              <p class="px-6 pb-4 text-gray-300">{answer}</p>
+            </div>
+          </div>
+        ),
+      )
+    }
+  </div>
+</div>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const accordionButtons = document.querySelectorAll('[data-accordion]')
+
+    accordionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const index = button.getAttribute('data-accordion')
+        const content = document.querySelector(`[data-content="${index}"]`)
+        const icon = button.querySelector('svg')
+
+        // Toggle current accordion
+        content?.classList.toggle('max-h-0')
+        content?.classList.toggle('max-h-48')
+        icon?.classList.toggle('rotate-180')
+
+        // Close other accordions
+        accordionButtons.forEach(otherButton => {
+          if (otherButton !== button) {
+            const otherIndex = otherButton.getAttribute('data-accordion')
+            const otherContent = document.querySelector(
+              `[data-content="${otherIndex}"]`,
+            )
+            const otherIcon = otherButton.querySelector('svg')
+
+            otherContent?.classList.add('max-h-0')
+            otherContent?.classList.remove('max-h-48')
+            otherIcon?.classList.remove('rotate-180')
+          }
+        })
+      })
+    })
+  })
+</script>

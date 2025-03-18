@@ -1,0 +1,121 @@
+---
+import ContainerWithBorder from '../atoms/ContainerWithBorder.astro'
+import DoubleSectionHeading from '../atoms/DoubleSectionHeading.astro'
+import ProgressCircle from '../atoms/ProgressCircle.astro'
+import TextWithTitleAndIcon from '../atoms/TextWithTitleAndIcon.astro'
+const problems = [
+  {
+    title: 'Missed Revenue Opportunities',
+    description:
+      'Delayed responses to tenders/clients can lead to missing contracts.',
+    percentage: 15,
+  },
+  {
+    title: 'Revenue Tied Up In Delays',
+    description:
+      'Project delays from manual processes slow down cash flow and payments.',
+    percentage: 30,
+  },
+
+  {
+    title: 'Project Overruns',
+    description:
+      'Manual tracking of project timelines can lead to delays, resulting in an increase in budget overruns.',
+    percentage: 60,
+  },
+]
+const solutions = [
+  {
+    title: 'Increased Efficiency',
+    description:
+      'Automation eliminates repetitive, manual tasks, allowing you and your team to focus on higher-value work.',
+    percentage: 45,
+  },
+  {
+    title: 'Improved Scalability',
+    description:
+      'As your business grows, automation scales with you, enabling you to handle increased workloads. Allowing you to manage up to 40% more projects with the same team size.',
+    percentage: 60,
+  },
+  {
+    title: 'Revenue Growth',
+    description:
+      'Automate bid preparation, response tracking, and reporting to win more tenders, driving additional revenue annually.',
+    percentage: 30,
+  },
+]
+---
+
+<script>
+  import { sectionScrollAnimation, showCtaOnScroll } from '../../gsapAnimations'
+  sectionScrollAnimation('pitch', 'pitch-animation')
+  showCtaOnScroll('pitch')
+</script>
+
+<main
+  id="pitch"
+  class="flex flex-col justify-center items-center min-h-screen h-fit px-2 pt-28 pitch"
+>
+  <DoubleSectionHeading
+    accentHeading="WHY AUTOMATE"
+    mainHeading="Transform Your Business"
+    animationClass="pitch-animation"
+  />
+  <p class="text-md p-6 w-10/12 pitch-animation text-center">
+    Automated workflows can dramatically improve your processes and give you
+    time back to focus on what you do best - but they can also be a pain to get
+    right, often requiring a fair amount of techinical expertise to customise,
+    and truly unlock value from. We're your automation experts. We love helping
+    businesses transform into the most productive versions of themselves through
+    the power of automation.
+  </p>
+
+  <div
+    class="flex flex-col-reverse lg:flex-row-reverse flex-wrap items-start justify-between lg:items-center lg:justify-center gap-2 w-full mt-6"
+  >
+    <ContainerWithBorder
+      classes={[
+        'flex flex-col items-center w-full lg:w-5/12 gap-3 p-4 max-h-fit pitch-animation',
+      ]}
+    >
+      <p class="text-md mt-6 max-w-56 font-bold">With Workflow Automations</p>
+      <div class="flex flex-col justify-between items-start w-full mb-6">
+        {
+          solutions.map(({ percentage, title, description }, index) => (
+            <div class="flex items-center justify-start gap-4 w-full px-2 min-h-40">
+              <ProgressCircle percentage={percentage} index={index} />
+              <div class="max-w-96">
+                <h1 class="text-[1rem] font-bold subtitle">{title}</h1>
+                <p class="text-md text-gray-400 mt-2">{description}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </ContainerWithBorder>
+    <div
+      class="flex flex-col justify-start w-full items-center lg:w-5/12 gap-6"
+    >
+      <p class="text-md max-w-56 text-center font-bold pitch-animation">
+        Pain Points
+      </p>
+
+      <div class="flex flex-col items-center justify-center gap-6 w-9/12">
+        {
+          problems.map(({ title, description }) => (
+            <TextWithTitleAndIcon
+              useImageWithDynamicallyImportedSrc
+              icon="cross.png"
+              title={title}
+              description={description}
+              classes={['w-full mt-4 md:mt-0 h-32 p-4 pitch-animation']}
+            />
+          ))
+        }
+      </div>
+      <span class="text-sm text-gray-500 italic mt-2 pitch-animation">
+        Derived from industry research and real-world data.</span
+      >
+    </div>
+  </div>
+</main>

@@ -1,0 +1,57 @@
+---
+import Layout from '../../layouts/Layout.astro'
+
+import PreviewCard from '../../components/atoms/PreviewCard.astro'
+import Pagination from '../../components/atoms/Pagination.astro'
+import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
+import SectionSubtitle from '../../components/atoms/SectionSubtitle.astro'
+import contentfulClient from '../../lib/contentful'
+import type { Asset, EntryFieldTypes } from 'contentful'
+
+export interface BlogArticleType {
+  contentTypeId: 'blogArticle'
+  fields: {
+    image: Asset
+    author: EntryFieldTypes.Text
+    title: EntryFieldTypes.Text
+    article: EntryFieldTypes.RichText
+    tags: EntryFieldTypes.Object
+    date: EntryFieldTypes.Date
+    description: EntryFieldTypes.Text
+  }
+}
+const blogs = await contentfulClient.getEntries<BlogArticleType>({
+  content_type: 'blogArticle',
+})
+---
+
+<script>
+  import { sectionScrollAnimation, showCtaOnScroll } from '../../gsapAnimations'
+  sectionScrollAnimation('blog', 'blog-animation')
+  showCtaOnScroll('blog')
+</script>
+<Layout title="InnovaQuest - AEC Automation Solutions">
+  <main
+    id="blog"
+    class="flex flex-col items-center justify-between gap-10 min-h-fit py-36 px-8 blog"
+  >
+    <DoubleSectionHeading
+      accentHeading="BLOG"
+      mainHeading="Automation Knowledge Base"
+      animationClass="cases-animation"
+    />
+    <SectionSubtitle animationClass="pricing-animation">
+      The latest automation content from our founders
+    </SectionSubtitle>
+    {/*<Searchbar animationClass="blog-animation" />*/}
+
+    <div class="flex flex-wrap justify-center gap-20 mt-8 w-11/12">
+      {
+        blogs.items.map(({ sys: { id }, fields }) => (
+          <PreviewCard id={id} item={fields} animationClass="blog-animation" />
+        ))
+      }
+    </div>
+    <Pagination currentPage={2} totalPages={10} baseUrl="/blog" />
+  </main>
+</Layout>
