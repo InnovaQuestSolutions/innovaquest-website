@@ -52,16 +52,16 @@ const reviews = await contentfulClient.getEntries<TestimonialsType>({
 
 <main
   id="reviews"
-  class="flex flex-col justify-evenly items-center min-h-screen h-fit px-6 pt-16 reviews"
+  class="flex flex-col justify-evenly items-center min-h-screen h-fit px-6 pt-28 xl:pt-16 reviews"
 >
   <DoubleSectionHeading
-    accentHeading="SUCCESS STORIES"
-    mainHeading="From Our Partners"
+    accentHeading="TESTIMONIALS"
+    mainHeading="We're loved by our partners"
     animationClass="reviews-animation"
   />
 
   <div
-    class="flex flex-col mt-12 md:mt-0 gap-10 md:flex-row justify-center items-center w-full"
+    class="flex flex-col mt-12 xl:mt-0 gap-10 xl:flex-row justify-center items-center w-full"
   >
     {
       reviews.items.map(item => {

@@ -12,7 +12,7 @@ interface Props {
 
 const { imageName, alt, width, height, classes } = Astro.props
 const images = import.meta.glob<{ default: ImageMetadata }>(
-  '/src/assets/images/*.{jpeg,jpg,png,gif,webp,avif}',
+  '/src/assets/images/*.{jpeg,jpg,png,gif,webp,avif,svg}',
 )
 const resolvedImagePath = images[`/src/assets/images/${imageName}`]
 

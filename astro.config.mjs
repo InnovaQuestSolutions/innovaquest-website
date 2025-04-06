@@ -12,7 +12,7 @@ export default defineConfig({
   },
   integrations: [tailwind()],
   output: "server",
- adapter: node({
+  adapter: node({
   mode: 'standalone',
   }),
 });

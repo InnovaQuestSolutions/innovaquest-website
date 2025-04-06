@@ -7,7 +7,7 @@ import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.as
 import SectionSubtitle from '../../components/atoms/SectionSubtitle.astro'
 import contentfulClient from '../../lib/contentful'
 import type { Asset, EntryFieldTypes } from 'contentful'
-
+export const prerender = false
 export interface BlogArticleType {
   contentTypeId: 'blogArticle'
   fields: {
@@ -52,6 +52,5 @@ const blogs = await contentfulClient.getEntries<BlogArticleType>({
         ))
       }
     </div>
-    <Pagination currentPage={2} totalPages={10} baseUrl="/blog" />
   </main>
 </Layout>

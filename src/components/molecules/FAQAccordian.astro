@@ -29,10 +29,10 @@ const { faqs, animationClass } = Astro.props
             ]}
           >
             <button
-              class="w-full px-6 py-4 text-left flex justify-between items-center text-white hover:text-[#B0BAFF] transition-colors"
+              class="w-full px-6 py-4 text-left flex justify-between items-center text-white hover:text-[#B2C6FE] transition-colors"
               data-accordion={index}
             >
-              <span>{question}</span>
+              <span class="mr-4">{question}</span>
               <svg
                 class="w-6 h-6 transform transition-transform duration-200"
                 fill="none"
@@ -72,7 +72,7 @@ const { faqs, animationClass } = Astro.props
 
         // Toggle current accordion
         content?.classList.toggle('max-h-0')
-        content?.classList.toggle('max-h-48')
+        content?.classList.toggle('max-h-fit')
         icon?.classList.toggle('rotate-180')
 
         // Close other accordions
@@ -85,7 +85,7 @@ const { faqs, animationClass } = Astro.props
             const otherIcon = otherButton.querySelector('svg')
 
             otherContent?.classList.add('max-h-0')
-            otherContent?.classList.remove('max-h-48')
+            otherContent?.classList.remove('max-h-fit')
             otherIcon?.classList.remove('rotate-180')
           }
         })

@@ -24,54 +24,42 @@ const {
 } = Astro.props
 ---
 
-<script>
-  import { modalIsOpenWithId } from '../../stores/modalStore'
-  const setModalIsOpen = () => modalIsOpenWithId.set({ id: '' })
-  document
-    .querySelectorAll('.modal-trigger-image')
-    .forEach(node => node.addEventListener('click', setModalIsOpen))
-</script>
 <div
+  data-title={title}
   class:list={[
-    'flex flex-col justify-between cases-animation rounded-lg bg-black bg-opacity-30 h-[475px] md:h-[525px] w-96 lg:w-[500px] backdrop-blur-sm',
+    'flex flex-col justify-between cases-animation rounded-lg bg-black bg-opacity-30 min-h-[500px] md:min-h-[575px] w-full xl:w-1/2 max-w-[600px] backdrop-blur-sm',
     animationClass ? animationClass : null,
   ]}
 >
   <div
     class:list={[
-      'relative rounded-lg flex min-h-60 max-h-60 md:min-h-72 md:max-h-72 overflow-hidden w-full modal-trigger-image',
+      'relative rounded-lg flex min-h-40 max-h-min-h-40 md:min-h-72 md:max-h-72 overflow-hidden w-full',
     ]}
   >
     <a href=`/blog/${id}`>
       <img
-        src={image.fields?.file?.url}
+        src={(image as Asset).fields?.file?.url as string}
         alt={title}
         class="absolute top-0 left-0 zoom-on-hover scale-110 w-full"
       />
     </a>
   </div>
 
-  <div
-    class="px-6 pb-6 flex flex-col justify-start items-start gap-4 max-h-full"
-  >
-    <div class="flex justify-between items-end w-full">
-      <p class="text-sm text-gray-400 mt-4">
-        {new Date(date).toLocaleDateString()}
-      </p>
-      <a
-        href=`/blog/${id}`
-        class="text-sm secondary-button"
-        id="modal-trigger-btn">Read More</a
-      >
-    </div>
-    <p class="text-md mt-2">{description}</p>
-    <h1 class="text-[1rem] font-bold subtitle max-w-80">{title}</h1>
+  <div class="p-6 flex flex-col items-start justify-evenly gap-3">
+    <h1 class="text-xl subtitle mt-2 lg:text-2xl">{title.toUpperCase()}</h1>
+    <p class="text-md mb-6 text-gray-400">{description}</p>
 
-    <div class="flex justify-start items-center w-full mt-4 gap-4">
+    <p class="text-sm text-gray-400 md:mt-4">
+      {new Date(date).toLocaleDateString()}
+    </p>
+    <a href=`/blog/${id}` class="secondary-button" id="modal-trigger-btn"
+      >READ MORE</a
+    >
+    <div class="flex flex-wrap justify-start items-center w-full my-4 gap-4">
       {
         tags.map((tag: string) => (
-          <span class="border border-gray-700 rounded-full p-2 min-w-32 w-fit text-center text-xs text-gray-400">
-            {tag}
+          <span class="border border-gray-700 rounded-full py-2 px-4 w-fit text-center text-xs text-gray-400">
+            {tag.toUpperCase()}
           </span>
         ))
       }

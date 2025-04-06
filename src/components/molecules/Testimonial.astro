@@ -35,21 +35,10 @@ while (r > 0) {
 
 <ContainerWithBorder
   classes={[
-    'flex flex-col gap-6 justify-center items-center py-6 w-96 h-[425px] pointer',
+    'flex flex-col gap-2 justify-evenly items-center py-6 w-full sm:w-96 min-h-[500px] h-fit pointer',
     classes ? classes : '',
   ]}
 >
-  <img src={`${clientLogo?.fields?.file?.url}`} alt="company logo" width={90} />
-  <div class="flex justify-center gap-2 items-center w-full">
-    <h1 class="text-md text-gray-400 text-center subtitle">
-      {clientName}
-    </h1>
-    <div class="border-r border-gray-600 h-3"></div>
-    <h1 class="text-md font-bold text-gray-400 text-center subtitle">
-      {clientCompanyName}
-    </h1>
-  </div>
-  {/*<div class="border-r border-gray-600 h-16"></div>*/}
   <div class="flex items-center justify-center gap-2 w-1/2">
     {
       ratingArray.map(star => (
@@ -61,7 +50,24 @@ while (r > 0) {
       ))
     }
   </div>
-  <p class="text-gray-400 text-md text-center w-10/12 italic">
+  <div class="h-16 flex justify-center items-center">
+    <img
+      src={`${clientLogo?.fields?.file?.url}`}
+      alt="company logo"
+      width={90}
+    />
+  </div>
+  <div class="flex justify-center gap-2 items-center w-full">
+    <h1 class="text-md text-center font-bold">
+      {clientName.toUpperCase()}
+    </h1>
+    <div class="border-r border-gray-600 h-3"></div>
+    <h1 class="text-md text-center">
+      {clientCompanyName.toUpperCase()}
+    </h1>
+  </div>
+  <div class="border-b-[0.5px] border-gray-700 w-10/12"></div>
+  <p class="text-gray-400 text-md text-center w-10/12 h-32">
     {clientEndorsement}
   </p>
 </ContainerWithBorder>

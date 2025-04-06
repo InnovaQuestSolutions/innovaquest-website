@@ -1,76 +1,9 @@
 ---
+import BookACall from './atoms/BookACall.astro'
 import ImageWithDynamicallyImportedSrc from './atoms/ImageWithDynamicallyImportedSrc.astro'
 ---
 
-<script>
-  import { gsap } from 'gsap'
-  // First, make sure GSAP is loaded
-  const marqueeAnimation = () => {
-    // Select the marquee container and the content to animate
-    const marqueeContainer = document.querySelector('.marquee-container')
-    const marqueeContent = document.querySelector('.marquee-content')
-    const marqueeContentChaser = document.querySelector(
-      '.marquee-content-chaser',
-    )
-    const marqueeItem = document.querySelector('.marquee-item')
-    // Clone the content to create a seamless loop
-    const clone = marqueeContent!.cloneNode(true)
-    //marqueeContainer!.appendChild(clone!)
-
-    // Get the width of the content
-    const contentWidth = marqueeContent!.clientWidth
-
-    // Set up the GSAP timeline
-    const tl = gsap.timeline({
-      repeat: -1, // Infinite repeat
-      defaults: {
-        ease: 'none', // Linear animation
-      },
-    })
-
-    //gsap.set(clone, { x: contentWidth })
-    // Animate both the original and cloned content
-    tl.to([marqueeContent, marqueeContentChaser], {
-      x: -contentWidth, // Move left by content width
-      duration: 70, // Adjust speed by changing duration
-      onComplete: () => {
-        // Reset position when animation completes
-        gsap.set([marqueeContent], {
-          x: contentWidth,
-        })
-      },
-    })
-
-    // Optional: Pause on hover
-    marqueeContainer?.addEventListener('mouseenter', () => {
-      tl.pause()
-    })
-
-    marqueeContainer?.addEventListener('mouseleave', () => {
-      tl.play()
-    })
-  }
-
-  // Initialize the marquee
-  marqueeAnimation()
-</script>
-
-<!-- HTML Structure -->
-<style>
-  .marquee-container {
-    width: 100vw;
-    overflow: hidden;
-  }
-
-  .marquee-content,
-  .marquee-content-chaser {
-    display: flex;
-    white-space: nowrap;
-    will-change: transform;
-  }
-</style>
-
-<main id="home" class="min-h-screen pt-32 px-8 relative">
+<main id="home" class="min-h-screen pt-32 lg:pt-52 xl:pt-32 px-8 relative">
   <div class="max-w-7xl mx-2 md:mx-20">
     <h1
       class="heading-bg-animation-hero bg-right text-[3rem] md:text-[6rem] font-bold leading-none tracking-tighter mt-40"
@@ -79,20 +12,17 @@ import ImageWithDynamicallyImportedSrc from './atoms/ImageWithDynamicallyImporte
       <span class="block text-[#B2C6FE] staggered-fade-in">Automations</span>
     </h1>
 
-    <div class="mt-8 flex-col">
-      <p class="text-lg text-gray-400 max-w-md">
+    <div class="my-10 flex-col">
+      <p class="text-sm sm:text-xl text-gray-300 max-w-md">
         We turbo charge your business with powerful automated workflows
         customised to suit your needs
       </p>
-      <div class="mt-8 flex items-center gap-6">
-        <button
-          class="border border-[#B2C6FE] rounded-lg p-2 text-[#B2C6FE] w-[175px] cta-button"
-          >Book A Call</button
-        >
+      <div class="mt-10 flex items-center gap-6">
+        <BookACall />
         <a
           href="#pricing"
           class="hover:text-[#B2C6FE] transition-colors secondary-button h-8"
-          >View Pricing</a
+          >VIEW PRICING</a
         >
       </div>
     </div>
@@ -102,7 +32,7 @@ import ImageWithDynamicallyImportedSrc from './atoms/ImageWithDynamicallyImporte
       imageName={'scroll.png'}
       alt="company logo"
       width={50}
-      classes={'absolute bottom-10 left-[calc(50%)] -translate-x-[30px]'}
+      classes={'hidden sm:block absolute bottom-10 left-[calc(50%)] -translate-x-[30px]'}
     />
   </a>
 </main>

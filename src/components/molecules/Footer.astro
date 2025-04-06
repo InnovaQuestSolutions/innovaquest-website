@@ -4,43 +4,68 @@ import SocialLinks from '../atoms/SocialLinks.astro'
 import { navItems } from '../../utils/navItems'
 import ImageWithDynamicallyImportedSrc from '../atoms/ImageWithDynamicallyImportedSrc.astro'
 import BookACall from '../atoms/BookACall.astro'
+
+const footerOnlyNavItems: { [k: string]: string }[] = [
+  { href: '/legal/terms', label: 'Terms & Conditions' },
+  { href: '/legal/privacy', label: 'Privacy Policy' },
+]
 ---
 
-<footer class="bg-black text-white py-8">
-  <div class="flex flex-col-reverse gap-6 md:flex-row justify-between px-16">
-    <div class="flex flex-col items-center justify-center gap-2">
-      <a href="/#home">
-        <ImageWithDynamicallyImportedSrc
-          imageName="logo_main.png"
-          alt="logo"
-          width={200}
-        />
-      </a>
+<footer
+  class="relative bg-black text-white p-16 min-w-full flex flex-col items-start gap-10 xl:flex-row justify-between min-h-[85vh] md:min-h-[50vh]"
+>
+  <div class="flex flex-col items-start justify-start gap-2 -ml-4">
+    <a href="/#home">
+      <ImageWithDynamicallyImportedSrc
+        imageName="Logo_main.svg"
+        alt="logo"
+        width={200}
+      />
+    </a>
 
-      <BookACall animationClass="ml-4" />
-    </div>
-    <nav class="grid grid-cols-2 gap-3 w-[400px] my-4">
-      {
-        navItems.map(({ href, label }) => (
-          <a
-            href={href}
-            class="text-md hover:text-[#B2C6FE] transition-colors secondary-button max-w-fit"
-          >
-            {label}
-          </a>
-        ))
-      }
-    </nav>
-    <div class="flex flex-col gap-3 mt-4">
-      <span class="max-w-96"> CONTACT US</span>
-      <span class="max-w-96 text-gray-400"> office@innovaquest.ai</span>
-    </div>
-
-    <div class="flex flex-col max-w-96 mt-4">
-      <p>ADDRESS</p>
-      <p class="text-sm text-gray-400 mt-4">
-        Strada Radauților 17, Oradea, Bihor, Romania.
-      </p>
-    </div>
+    <BookACall animationClass="ml-4" />
   </div>
+  <nav class="flex flex-col gap-3 max-w-96 my-4">
+    SITE MAP
+    {
+      navItems.map(({ href, label }) => (
+        <a
+          href={href}
+          class="text-gray-400 text-sm hover:text-[#B2C6FE] transition-colors secondary-button max-w-fit"
+        >
+          {label.toUpperCase()}
+        </a>
+      ))
+    }
+  </nav>
+  <nav class="flex flex-col gap-3 max-w-96 my-4">
+    LEGAL
+    {
+      footerOnlyNavItems.map(({ href, label }) => (
+        <a
+          href={href}
+          class="text-gray-400 text-sm hover:text-[#B2C6FE] transition-colors secondary-button max-w-fit"
+        >
+          {label.toUpperCase()}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="flex flex-col gap-3 mt-4">
+    CONTACT US
+    <span class="max-w-96 text-gray-400">
+      <a href="mailto:office@innovaquest.ai">office@innovaquest.ai</a>
+    </span>
+    <SocialLinks />
+  </div>
+
+  <div class="flex flex-col max-w-96 mt-4">
+    ADDRESS
+    <p class="text-sm text-gray-400 mt-4">
+      Strada Radautilor 17, Oradea, Bihor, Romania.
+    </p>
+  </div>
+  <span class="absolute bottom-5 left-auto text-gray-400">
+    &#169 InnovaQuest 2025.</span
+  >
 </footer>

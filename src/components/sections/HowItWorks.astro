@@ -24,15 +24,15 @@ const methodologyContent = methodology.items[0].fields.methodologyContent
 
 <main
   id="method"
-  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-16 method"
+  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-32 method"
 >
   <DoubleSectionHeading
     accentHeading="OUR PROCESS"
-    mainHeading="How it Works"
+    mainHeading="Nurturing results at each milestone"
     animationClass="method-animation"
   />
 
-  <div class="flex flex-wrap justify-center w-full mt-4 md:gap-10">
+  <div class="flex flex-wrap justify-center w-full mt-8 gap-10">
     {
       (methodologyContent as { [k: string]: string }[]).map(
         ({ title, description }, index) => (
@@ -41,7 +41,7 @@ const methodologyContent = methodology.items[0].fields.methodologyContent
             description={description}
             index={index}
             classes={[
-              'method-animation p-6 m-2 min-w-full lg:min-w-[525px] lg:max-w-[525px] h-48 border-none',
+              'method-animation p-6 m-2 lg:m-6 w-full lg:min-w-[525px] lg:max-w-[525px] h-fit lg:h-60 border-[0.5px] border-gray-700',
             ]}
           />
         ),

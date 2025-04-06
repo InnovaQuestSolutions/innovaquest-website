@@ -6,6 +6,7 @@
 
 <script>
   import * as THREE from 'three'
+  import { animateBackgroundOnScroll } from '../gsapAnimations'
 
   let scene: THREE.Scene,
     camera: THREE.PerspectiveCamera,
@@ -45,7 +46,7 @@
 
     torus = new THREE.Mesh(geometry, material)
     scene.add(torus)
-
+    animateBackgroundOnScroll('pitch', camera)
     const centerPointLight = new THREE.PointLight(0xfffff, 20, 20) // Additional colored light
     centerPointLight.position.set(0, 0, 5)
     scene.add(centerPointLight)
@@ -115,6 +116,7 @@
       window.removeEventListener('mousemove', onMouseMove)
     }
   })
+
   document.addEventListener('astro:after-swap', () => {
     initThree()
     cancelAnimationFrame(animationId)
