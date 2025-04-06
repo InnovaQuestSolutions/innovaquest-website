@@ -46,7 +46,22 @@ const { navItems } = Astro.props
 </div>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const burgerBtn = document.getElementById('burger-btn')
+    const mobileMenu = document.getElementById('mobile-menu')
+    const burgerIcon = document.getElementById('burger-icon')
+    const closeIcon = document.getElementById('close-icon')
+
+    const toggleMenu = () => {
+      mobileMenu?.classList.toggle('hidden')
+      burgerIcon?.classList.toggle('hidden')
+      closeIcon?.classList.toggle('hidden')
+    }
+
+    burgerBtn?.addEventListener('click', toggleMenu)
+    mobileMenu?.addEventListener('click', toggleMenu)
+  })
+  document.addEventListener('astro:after-swap', () => {
     const burgerBtn = document.getElementById('burger-btn')
     const mobileMenu = document.getElementById('mobile-menu')
     const burgerIcon = document.getElementById('burger-icon')
