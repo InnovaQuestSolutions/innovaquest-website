@@ -5,9 +5,13 @@ interface Props {
 const { animationClass } = Astro.props
 ---
 
-<button
-  class:list={[
-    'justify-self-end border border-[#B2C6FE] rounded-lg p-2 text-[#B2C6FE] w-[175px] cta-button',
-    animationClass ? animationClass : null,
-  ]}>Book A Call</button
+<a href="https://form.typeform.com/to/QPtsUFJn">
+  <button
+    class:list={[
+      'tracking-wider rounded-full px-6 bg-gray-700 min-w-48 w-fit min-h-11 max-h-min-h-11 text-white text-xs sm:text-sm transition ease-out duration-300 hover:bg-[#B2C6FE]',
+      animationClass ? animationClass : null,
+    ]}
+  >
+    BOOK A CALL</button
+  ></a
 >

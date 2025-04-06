@@ -26,21 +26,19 @@ const services = await contentfulClient.getEntries<ServiceExampleType>({
 
 <main
   id="services"
-  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-16 service"
+  class="flex flex-col justify-center items-center min-h-screen h-fit px-8 pt-36 service"
 >
   <DoubleSectionHeading
     accentHeading="EXPERTLY CRAFTED"
-    mainHeading="Custom Solutions"
+    mainHeading="Custom Solutions to boost your success"
     animationClass="services-animation"
   />
 
   <SectionSubtitle animationClass="services-animation">
     We create seamless flows that save businesses hundreds of hours, improve
     conversion and modernise processes.
-    <br />
-     Here are some of our services.
   </SectionSubtitle>
-  <div class="flex flex-wrap justify-center w-full mt-4 gap-8">
+  <div class="flex flex-wrap justify-center w-full mt-4 gap-6">
     {
       services.items.map(({ fields }) => {
         const icon: Asset = fields.serviceIcon
@@ -50,7 +48,7 @@ const services = await contentfulClient.getEntries<ServiceExampleType>({
             title={fields.serviceTitle}
             description={fields.serviceDescription}
             classes={[
-              'services-animation p-6 m-2 lg:m-6 w-full md:min-w-96 md:max-w-96 h-48',
+              'services-animation p-6 m-2 lg:m-6 w-full lg:min-w-[500px] lg:max-w-[500px] h-fit md:h-60',
             ]}
           />
         )

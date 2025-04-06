@@ -2,13 +2,8 @@
 import Layout from '../../layouts/Layout.astro'
 import CaseStudy from '../../components/atoms/CaseStudy.astro'
 import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
-import Background from '../../components/Background.astro'
-import Loader from '../../components/atoms/Loader.astro'
-import CaseStudyDetailed from '../../components/molecules/CaseStudyDetailed.astro'
-import Modal from '../../components/molecules/Modal.astro'
 import type { Asset, EntryFieldTypes } from 'contentful'
 import contentfulClient from '../../lib/contentful'
-export const prerender = false
 
 export interface CaseStudyType {
   contentTypeId: 'case-study-content'
@@ -38,7 +33,7 @@ const cases = await contentfulClient.getEntries<CaseStudyType, string>({
 <Layout>
   <main
     id="cases"
-    class="flex flex-col items-center h-fit min-h-screen pt-36 px-4 cases"
+    class="flex flex-col items-center h-fit min-h-screen py-36 px-4 cases"
   >
     <DoubleSectionHeading
       accentHeading="CASE STUDIES"
@@ -66,8 +61,5 @@ const cases = await contentfulClient.getEntries<CaseStudyType, string>({
         )
       }
     </div>
-    <Modal id="cases-modal" server:defer slot="fallback">
-      <CaseStudyDetailed />
-    </Modal>
   </main>
 </Layout>

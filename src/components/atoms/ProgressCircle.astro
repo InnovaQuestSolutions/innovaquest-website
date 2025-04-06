@@ -3,50 +3,33 @@
 interface Props {
   percentage: number
   index: number
-  isModalChild?: boolean
+  size?: number
 }
 
-const { percentage, index, isModalChild } = Astro.props
-const circumference = 2 * Math.PI * 40 // radius is 40
+const { percentage, index, size = 1 } = Astro.props
+const baseRadius = 40
+const radius = baseRadius * size
+const viewBoxSize = 128 * size
+const centerPoint = viewBoxSize / 2
+const circumference = 2 * Math.PI * radius
 const offset = circumference - (percentage / 100) * circumference
+const strokeWidth = 8 * size
 ---
 
 <script>
-  import {
-    percentagesOnShowAnimation,
-    percentagesScrollAnimation,
-    percentagesOnHideAnimation,
-  } from '../../gsapAnimations'
-  import { modalIsOpenWithId } from '../../stores/modalStore'
+  import { percentagesScrollAnimation } from '../../gsapAnimations'
 
   class ProgressCircle extends HTMLElement {
     connectedCallback() {
       const offset = this.dataset.offset
       const index = this.dataset.index
-      const isModalChild = this.dataset.isModalChild
 
-      if (!isModalChild) {
-        percentagesScrollAnimation(
-          'pitch',
-          `pitch-circle-animation-${index}`,
-          offset,
-          index,
-        )
-      }
-
-      if (isModalChild) {
-        modalIsOpenWithId.subscribe(isOpenWithId => {
-          if (isOpenWithId) {
-            percentagesOnShowAnimation(
-              `modal-circle-animation-${index}`,
-              offset,
-              index,
-            )
-          } else if (!isOpenWithId) {
-            percentagesOnHideAnimation(`modal-circle-animation-${index}`)
-          }
-        })
-      }
+      percentagesScrollAnimation(
+        'pitch',
+        `pitch-circle-animation-${index}`,
+        offset,
+        index,
+      )
     }
   }
 
@@ -56,33 +39,37 @@ const offset = circumference - (percentage / 100) * circumference
 <progress-circle
   data-offset={offset}
   data-index={index}
-  data-is-Modal-Child={isModalChild}
   class="relative inline-flex items-center justify-center"
 >
   <div class="relative inline-flex items-center justify-center">
-    <svg class="transform -rotate-90 w-32 h-32">
+    <svg
+      class="transform -rotate-90"
+      width={`${128 * size}px`}
+      height={`${128 * size}px`}
+      viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
+    >
       <circle
         id="progress-circle-id"
-        cx="64"
-        cy="64"
-        r="40"
+        cx={centerPoint}
+        cy={centerPoint}
+        r={radius}
         stroke="rgba(255, 255, 255, 0.1)"
-        stroke-width="8"
+        stroke-width={strokeWidth}
         fill="none"></circle>
       <circle
         id="progress-circle"
-        class={!isModalChild
-          ? `pitch-circle-animation-${index}`
-          : `modal-circle-animation-${index}`}
-        cx="64"
-        cy="64"
-        r="40"
+        class={`pitch-circle-animation-${index}`}
+        cx={centerPoint}
+        cy={centerPoint}
+        r={radius}
         stroke="rgb(176, 186, 255)"
-        stroke-width="8"
+        stroke-width={strokeWidth}
         fill="none"
         stroke-dasharray={circumference}
         stroke-dashoffset={circumference}></circle>
     </svg>
-    <span class="absolute text-white text-2xl font-medium">+{percentage}%</span>
+    <span class=`absolute font-bold text-white text-[${size}rem]`
+      >+{percentage}%</span
+    >
   </div>
 </progress-circle>
