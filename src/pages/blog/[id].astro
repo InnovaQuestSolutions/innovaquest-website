@@ -17,16 +17,16 @@ export interface BlogArticleType {
     description: EntryFieldTypes.Text
   }
 }
-const { id } = Astro.props
 
-const blogArticle = await contentfulClient.getEntries<BlogArticleType, string>({
-  content_type: 'blogArticle',
-  'sys.id': id,
-})
+const { id } = Astro.params
+
+const blogArticle = await contentfulClient.getEntry<BlogArticleType, string>(
+  id as string,
+)
 
 const {
   fields: { image, author, title, article, tags, date, description },
-} = blogArticle.items[0]
+} = blogArticle
 ---
 
 <Layout title="InnovaQuest - AEC Automation Solutions">
@@ -48,7 +48,9 @@ const {
           <p class="text-center text-sm tracking-wider font-bold">
             {new Date(date).toLocaleDateString()}
           </p>
-          <p class="text-center text-sm tracking-wider font-bold w-1/2">
+          <p
+            class="hidden lg:block text-center text-sm text-gray-300 tracking-wider w-1/2"
+          >
             {description}
           </p>
           <p class="text-center text-sm tracking-wider font-bold">
@@ -56,7 +58,7 @@ const {
           </p>
         </div>
         <div
-          class="relative w-full min-h-60 max-h-60 md:min-h-96 md:max-h-96 overflow-hidden rounded-md"
+          class="relative w-full lg:min-h-96 lg:max-h-96 overflow-hidden rounded-md"
         >
           <img
             src={`${(image as Asset).fields?.file?.url}`}
@@ -70,7 +72,7 @@ const {
           {
             (tags as string[]).map((tag: string) => (
               <span class="border border-gray-600 rounded-full p-3 min-w-52 w-fit text-center text-xs md:text-sm font-bold bg-black bg-opacity-30 backdrop-blur-sm">
-                {tag}
+                {tag.toUpperCase()}
               </span>
             ))
           }

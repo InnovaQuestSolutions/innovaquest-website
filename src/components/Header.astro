@@ -5,32 +5,32 @@ import { navItems } from '../utils/navItems'
 import ImageWithDynamicallyImportedSrc from './atoms/ImageWithDynamicallyImportedSrc.astro'
 ---
 
-<nav class="fixed w-full z-50 px-8 py-2 bg-black">
-  <div class="max-w-full m-2 flex justify-between items-center">
-    <span class="ml-28 lg:ml-0 flex text-xl font-bold justify-self-start">
-      <a href="/#home">
-        <ImageWithDynamicallyImportedSrc
-          imageName="logo_main.png"
-          alt="logo"
-          width={200}
-        />
-      </a>
-    </span>
-    <BurgerMenu navItems={navItems} />
-    <div class="hidden lg:flex items-center justify-end space-x-8">
-      {
-        navItems.map(({ href, label }) => (
-          <a
-            href={href}
-            class="hover:text-[#B2C6FE] transition-colors secondary-button"
-          >
-            {label}
-          </a>
-        ))
-      }
-    </div>
-    <div class="hidden md:block">
-      <BookACall animationClass="show-fixed-cta-on-scroll" />
-    </div>
+<nav
+  class="fixed w-full z-50 px-8 bg-black h-20 flex justify-between items-center"
+>
+  <span class="flex text-xl font-bold justify-self-start">
+    <a href="/#home">
+      <ImageWithDynamicallyImportedSrc
+        imageName="Logo_main.svg"
+        alt="logo"
+        width={200}
+      />
+    </a>
+  </span>
+  <BurgerMenu navItems={navItems} />
+  <div class="hidden xl:flex items-center justify-end space-x-8">
+    {
+      navItems.map(({ href, label }) => (
+        <a
+          href={href}
+          class="hover:text-[#B2C6FE] transition-colors secondary-button tracking-wider text-sm"
+        >
+          {label.toUpperCase()}
+        </a>
+      ))
+    }
+  </div>
+  <div class="hidden md:block">
+    <BookACall animationClass="show-fixed-cta-on-scroll" />
   </div>
 </nav>

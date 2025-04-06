@@ -19,7 +19,7 @@ const {
 
 <div
   class:list={[
-    'flex items-start rounded-lg bg-black bg-opacity-40 backdrop-blur-sm',
+    'flex flex-col gap-3 items-start rounded-lg bg-black bg-opacity-40 backdrop-blur-sm',
     classes && [...classes],
   ]}
 >
@@ -28,16 +28,22 @@ const {
       <ImageWithDynamicallyImportedSrc
         imageName={icon}
         alt={title}
-        width={25}
-        height={25}
-        classes={['mt-2']}
+        width={40}
+        height={40}
+        classes={['mt-2 opacity-50']}
       />
     ) : (
-      <img src={icon} alt={title} width={25} height={25} class="mt-2" />
+      <img
+        src={icon}
+        alt={title}
+        width={40}
+        height={40}
+        class="mt-2 opacity-50"
+      />
     )
   }
-  <div class="mx-4">
-    <h1 class="text-[1.2rem] font-bold subtitle mt-1">{title}</h1>
+  <div class="">
+    <h1 class="text-2xl mt-1 tracking-wider">{title.toUpperCase()}</h1>
     <p class="text-md text-gray-400 mt-2">{description}</p>
   </div>
 </div>

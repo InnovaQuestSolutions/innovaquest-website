@@ -1,5 +1,5 @@
 ---
-import type { Asset, EntryFieldTypes } from 'contentful'
+import type { Asset } from 'contentful'
 import ContainerWithBorder from '../../components/atoms/ContainerWithBorder.astro'
 import DoubleSectionHeading from '../../components/atoms/DoubleSectionHeading.astro'
 import ImageWithDynamicallyImportedSrc from '../../components/atoms/ImageWithDynamicallyImportedSrc.astro'
@@ -10,14 +10,15 @@ import contentfulClient from '../../lib/contentful'
 import { type CaseStudyType } from './index.astro'
 import Layout from '../../layouts/Layout.astro'
 
+const { id } = Astro.params
+let caseStudy
+try{
+caseStudy = await contentfulClient.getEntry<CaseStudyType, string>(id as string)
+} catch (err){
+  console.error(`${err}`)
+  return Astro.redirect('/404');
+}
 
-const { id } = Astro.props
-
-const caseStudy = await contentfulClient.getEntries<CaseStudyType, string>({
-        content_type: 'case-study-content',
-        "sys.id": id,
-       })
-       
 const {fields: {
         companyName,
         shortDescription,
@@ -28,7 +29,7 @@ const {fields: {
         architectureOverview,
         architectureOverviewImage,
         resultsPercentageDisplay,
-      } } = caseStudy.items[0] 
+      } } = caseStudy
 
 
 const sections = [
@@ -49,12 +50,12 @@ const sections = [
         animationClass="animated-heading text-start"
       />
       <div
-        class="relative w-full min-h-60 max-h-60 overflow-hidden rounded-md my-10"
+        class="relative w-full min-h-60 overflow-hidden rounded-md my-10"
       >
-        <ImageWithDynamicallyImportedSrc
-          imageName={'industry.png'}
+        <img
+        src={`${(heroImage as Asset).fields?.file?.url}`}
           alt={'industry'}
-          classes={['absolute w-full animated-heading']}
+          class='absolute w-full rounded-md my-10 animated-heading'
         />
       </div>
    
@@ -66,7 +67,7 @@ const sections = [
 
     <ContainerWithBorder
       classes={[
-        'flex flex-col justify-center items-center w-9/12 gap-4 p-6 h-fit md:sticky md:top-40 md:w-2/12 md:mb-12',
+        'flex flex-col justify-center items-center w-9/12 gap-4 p-6 h-fit my-12 md:sticky md:top-40 md:w-2/12 md:mb-12',
       ]}
     >
       <h1 class="text-[1rem] font-bold text-center subtitle">Results</h1>
@@ -75,11 +76,10 @@ const sections = [
         (resultsPercentageDisplay as {[k: string]: string | number}[]).map((result: {[k: string]: string | number}, index: number) => (
           <div class="flex flex-col items-center justify-center max-w-80 ">
             <ProgressCircle
-              isModalChild={true}
               percentage={result.percentage as number}
               index={index}
             />
-            <p class="text-md text-gray-300 mt-2 max-w-56 text-center">
+            <p class="text-sm xl:text-md text-gray-300 mt-2 max-w-56 text-center">
               {result.description}
             </p>
           </div>
@@ -99,39 +99,39 @@ const sections = [
       >
         <img
           src={`${(heroImage as Asset).fields?.file?.url}`}
-          alt={'industry'}
+          alt={''}
           class='absolute w-full animated-heading lg:-top-36'
         />
       </div>
      
 
-      <p class="text-md text-gray-300 font-bold w-full hidden md:block">
+      <p class="text-md text-gray-300 w-full hidden md:block">
         {shortDescription}
       </p>
       {
         sections.map(section => (
           <>
-            <div class="flex justify-between items-start gap-3">
+            <div class="flex justify-between mt-4 items-start gap-3">
               <ImageWithDynamicallyImportedSrc
                 imageName={'service.png'}
                 alt={'challenge'}
                 width={25}
                 height={25}
               />
-              <h1 class="text-[1rem] font-bold text-center animated-heading">
-                {section.title}
+              <h1 class="text-xl font-bold text-center animated-heading">
+                {section.title.toUpperCase()}
               </h1>
             </div>
             <p class="text-md text-gray-300 mt-2 w-full">{section.content}</p>
           </>
         ))
       }
-     {architectureOverview && <SectionHeading>Architecture Overview</SectionHeading>
+     {architectureOverview && <SectionHeading>ARCHITECTURE OVERVIEW</SectionHeading>
       <p class="text-md text-gray-300 mt-2 w-full font-bold">
        {architectureOverview}
       </p>
       <img
-        src={architectureOverviewImage}
+      src={`${(architectureOverviewImage! as Asset).fields?.file?.url}`}
         alt={'architecture'}
         class='w-full rounded-lg mb-10'
       />}

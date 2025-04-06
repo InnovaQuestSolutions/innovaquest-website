@@ -22,10 +22,7 @@ const faqs = await contentfulClient.getEntries<FAQsType>({
   sectionScrollAnimation('faq', 'faq-animation')
 </script>
 
-<main
-  id="faq"
-  class="flex flex-col justify-center items-center min-h-screen h-fit pt-16 px-4 faq"
->
+<main id="faq" class="flex flex-col justify-start items-center h-fit py-20 faq">
   <DoubleSectionHeading
     accentHeading="FAQs"
     mainHeading="Frequently Asked Questions"

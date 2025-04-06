@@ -7,6 +7,7 @@ import ImageWithDynamicallyImportedSrc from '../atoms/ImageWithDynamicallyImport
 
 import SectionSubtitle from '../atoms/SectionSubtitle.astro'
 import contentfulClient from '../../lib/contentful'
+import NewPricingCard from '../molecules/newPricingCard.astro'
 
 export interface PricingModelType {
   contentTypeId: 'pricing-model-content'
@@ -30,20 +31,16 @@ const models = await contentfulClient.getEntries<PricingModelType>({
 
 <main
   id="pricing"
-  class="flex flex-col justify-center items-center min-h-screen h-fit pt-16 px-4 pricing"
+  class="flex flex-col justify-center items-center min-h-screen h-fit pt-36 lg:pt-2 xl:pt-36 px-4 pricing"
 >
   <DoubleSectionHeading
-    accentHeading="OUR MODELS"
-    mainHeading="Partnerships & Pricing"
+    accentHeading="PARTNERSHIPS & PRICING"
+    mainHeading="WAYS TO WORK WITH US"
     animationClass="pricing-animation"
   />
 
-  <SectionSubtitle animationClass="pricing-animation">
-    We create seamless flows that save businesses hundreds of hours, improve
-    conversion and modernise processes.
-  </SectionSubtitle>
   <div
-    class="flex flex-col lg:flex-row gap-6 w-9/12 justify-center items-center mt-12"
+    class="flex flex-col lg:flex-row gap-6 w-11/12 justify-center items-center mt-12"
   >
     {
       models.items.map(
@@ -55,32 +52,12 @@ const models = await contentfulClient.getEntries<PricingModelType>({
             ctaButtonText,
           },
         }) => (
-          <ContainerWithBorder
-            classes={[
-              'flex flex-col items-center justify-center gap-6 w-80 h-[450px] p-6 pricing-animation',
-            ]}
-          >
-            <h1 class="text-[1.3rem] font-bold text-center subtitle">
-              {modelTypeTitle}
-            </h1>
-            <p class="text-md text-gray-400 w-full text-center">
-              {modelTagline}
-            </p>
-            <div class="flex flex-col items-start justify-center gap-2">
-              {(threeModelBenefits as string[]).map((benefit: string) => (
-                <div class="flex justify-between items-start gap-3">
-                  <ImageWithDynamicallyImportedSrc
-                    imageName={'tickNoBorder.png'}
-                    alt={'challenge'}
-                    width={25}
-                    height={25}
-                  />
-                  <p class="text-md  w-full">{benefit}</p>
-                </div>
-              ))}
-            </div>
-            <CtaButton>{ctaButtonText} </CtaButton>
-          </ContainerWithBorder>
+          <NewPricingCard
+            modelTypeTitle={modelTypeTitle}
+            modelTagline={modelTagline}
+            threeModelBenefits={threeModelBenefits as string[]}
+            ctaButtonText={ctaButtonText}
+          />
         ),
       )
     }

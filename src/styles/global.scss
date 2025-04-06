@@ -6,8 +6,8 @@
  // --accent: #E4CBFF;
   --accent: #B2C6FE;
   --accent-dark: hsl(269, 100%, 90%);
- // --subtitle: #E4CBFF
-  --subtitle: #B2C6FE
+ // --subtitle: #E4CBFF;
+  --subtitle: #B2C6FE;
 }
 
 /* Custom font */
@@ -18,6 +18,7 @@
 
 /* Smooth scrolling */
 html {
+
   scroll-behavior: smooth;
 }
 
@@ -35,7 +36,9 @@ html {
   transform: translateY(20px);
   animation: fadeUp 0.8s ease forwards;
 }
-
+.show-fixed-cta-on-scroll {
+  opacity: 0;
+}
   /* HTML: <div class="loader"></div> */
 .loader {
   width: 20px;
@@ -80,9 +83,7 @@ h1 span:nth-child(3) { animation-delay: 0.6s; }
     }
 }
  .secondary-button {
-
   position: relative;
-
   &::after {
     content: '';
     position: absolute;
@@ -93,9 +94,12 @@ h1 span:nth-child(3) { animation-delay: 0.6s; }
     background-color: var(--accent);
     transition: width 0.3s ease;
   }
-
   &:hover::after {
     width: 100%;
+  }
+
+  @media (max-width: 400px) {
+   font-size: small;
   }
 }
 .subtitle {

@@ -1,7 +1,7 @@
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ExpoScaleEase } from 'gsap/EasePack'
-
+import { type PerspectiveCamera } from 'three'
 gsap.registerPlugin(ScrollTrigger, ExpoScaleEase)
 
 export const sectionScrollAnimation = (
@@ -10,10 +10,11 @@ export const sectionScrollAnimation = (
 ) => {
   const tl = gsap.timeline({
     scrollTrigger: {
+      // scrub: 1,
       trigger: `.${triggerClass}`,
       start: 'top 50%',
       end: 'bottom bottom',
-      onLeaveBack: () => tl.reverse(),
+      //onLeaveBack: () => tl.reverse(),
       /*markers: {
         startColor: 'green',
         endColor: 'red',
@@ -21,16 +22,14 @@ export const sectionScrollAnimation = (
     },
   })
 
-  return tl
-    .to('.marquee-container', { opacity: 0 })
-    .from(`.${AnimatedElementClass}`, {
-      opacity: 0,
-      y: 100,
-      duration: 2.5,
-      stagger: 0.3,
-    })
+  return tl.from(`.${AnimatedElementClass}`, {
+    opacity: 0,
+    y: 100,
+    duration: 1,
+    stagger: 0.3,
+  })
 }
-
+gsap.set(`.show-fixed-cta-on-scroll`, { opacity: 0 })
 export const showCtaOnScroll = (triggerClass: string) => {
   const tl = gsap.timeline({
     scrollTrigger: {
@@ -44,9 +43,31 @@ export const showCtaOnScroll = (triggerClass: string) => {
       },*/
     },
   })
-  gsap.set(`.show-fixed-cta-on-scroll`, { opacity: 0 })
   return tl.to(`.show-fixed-cta-on-scroll`, {
     opacity: 1,
+  })
+}
+export const animateBackgroundOnScroll = (
+  triggerClass: string,
+  camera: PerspectiveCamera,
+) => {
+  const tl = gsap.timeline({
+    scrollTrigger: {
+      //scrub: 1,
+      trigger: `.${triggerClass}`,
+      start: 'top 70%',
+      end: 'bottom bottom',
+      // onEnter: () => camera.translateZ(-20),
+      onLeaveBack: () => tl.reverse(),
+      /*markers: {
+        startColor: 'green',
+        endColor: 'red',
+      },*/
+    },
+  })
+  // gsap.set(`.show-fixed-cta-on-scroll`, { opacity: 0 })
+  return tl.to(camera.position, {
+    z: -5,
   })
 }
 
