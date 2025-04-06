@@ -61,6 +61,37 @@ const { faqs, animationClass } = Astro.props
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const accordionButtons = document.querySelectorAll('[data-accordion]')
+
+    accordionButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const index = button.getAttribute('data-accordion')
+        const content = document.querySelector(`[data-content="${index}"]`)
+        const icon = button.querySelector('svg')
+
+        // Toggle current accordion
+        content?.classList.toggle('max-h-0')
+        content?.classList.toggle('max-h-fit')
+        icon?.classList.toggle('rotate-180')
+
+        // Close other accordions
+        accordionButtons.forEach(otherButton => {
+          if (otherButton !== button) {
+            const otherIndex = otherButton.getAttribute('data-accordion')
+            const otherContent = document.querySelector(
+              `[data-content="${otherIndex}"]`,
+            )
+            const otherIcon = otherButton.querySelector('svg')
+
+            otherContent?.classList.add('max-h-0')
+            otherContent?.classList.remove('max-h-fit')
+            otherIcon?.classList.remove('rotate-180')
+          }
+        })
+      })
+    })
+  })
   document.addEventListener('astro:after-swap', () => {
     const accordionButtons = document.querySelectorAll('[data-accordion]')
 
