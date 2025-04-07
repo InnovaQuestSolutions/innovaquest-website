@@ -3,22 +3,47 @@ import Background from '../components/Background.astro'
 import Header from '../components/Header.astro'
 import Footer from '../components/molecules/Footer.astro'
 import '../styles/global.scss'
-
 interface Props {
-  title: string
+  title: string;
+  description?: string; // Add optional description prop
+  image?: string; // Add optional social image prop
 }
-
-const { title } = Astro.props
+// Set defaults and get props
+const { 
+  title, 
+  description = "InnovaQuest provides game-changing automation solutions to streamline your business workflows and increase productivity.",
+  image = "/seosharing.png", // Create this image (1200x630px recommended)
+} = Astro.props;
 import { ClientRouter } from 'astro:transitions'
 ---
-
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="InnovaQuest | Game Changing Automations" />
+    
+    <!-- Improved SEO Meta Tags -->
+    <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="index, follow" />
+    <meta name="keywords" content="automation, innovaquest, business automation, workflows, productivity" />
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png" />
+    
+    <!-- Open Graph / Facebook Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:title" content={`InnovaQuest | ${title}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.url)} />
+    
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`InnovaQuest | ${title}`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(image, Astro.url)} />
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -29,9 +54,22 @@ import { ClientRouter } from 'astro:transitions'
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-
+    
     <meta name="generator" content={Astro.generator} />
     <title>InnovaQuest | {title}</title>
+    
+    <!-- Structured Data for Rich Results -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "InnovaQuest",
+        "url": "${Astro.url.origin}",
+        "logo": "${Astro.url.origin}/favicon.png",
+        "description": "${description}"
+      }
+    </script>
+    
     <ClientRouter fallback="none" />
   </head>
   <body class="bg-[#0a0b0c] font-space-grotesk text-white">
