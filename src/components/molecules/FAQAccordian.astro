@@ -31,6 +31,7 @@ const { faqs, animationClass } = Astro.props
             <button
               class="w-full px-6 py-4 text-left flex justify-between items-center text-white hover:text-[#B2C6FE] transition-colors"
               data-accordion={index}
+              aria-expanded="false"
             >
               <span class="mr-4">{question}</span>
               <svg
@@ -61,128 +62,78 @@ const { faqs, animationClass } = Astro.props
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+  // Single function to handle accordion functionality
+  function setupAccordions() {
     const accordionButtons = document.querySelectorAll('[data-accordion]')
-
+    
+    // First remove any existing event listeners to prevent duplicates
     accordionButtons.forEach(button => {
+      const newButton = button.cloneNode(true);
+      button.parentNode?.replaceChild(newButton, button);
+    });
+    
+    // Now get the fresh buttons and add listeners
+    const freshButtons = document.querySelectorAll('[data-accordion]');
+    
+    freshButtons.forEach(button => {
       button.addEventListener('click', () => {
         const index = button.getAttribute('data-accordion')
         const content = document.querySelector(`[data-content="${index}"]`)
         const icon = button.querySelector('svg')
-
+        const isExpanded = button.getAttribute('aria-expanded') === 'true'
+        
+        // Toggle current accordion state
+        button.setAttribute('aria-expanded', isExpanded ? 'false' : 'true')
+        
         // Toggle current accordion
-        content?.classList.toggle('max-h-0')
-        content?.classList.toggle('max-h-fit')
-        icon?.classList.toggle('rotate-180')
+        if (content) {
+          if (content.classList.contains('max-h-0')) {
+            content.classList.remove('max-h-0')
+            content.classList.add('max-h-fit')
+          } else {
+            content.classList.add('max-h-0')
+            content.classList.remove('max-h-fit')
+          }
+        }
+        
+        if (icon) {
+          icon.classList.toggle('rotate-180')
+        }
 
         // Close other accordions
-        accordionButtons.forEach(otherButton => {
+        freshButtons.forEach(otherButton => {
           if (otherButton !== button) {
             const otherIndex = otherButton.getAttribute('data-accordion')
             const otherContent = document.querySelector(
               `[data-content="${otherIndex}"]`,
             )
             const otherIcon = otherButton.querySelector('svg')
-
-            otherContent?.classList.add('max-h-0')
-            otherContent?.classList.remove('max-h-fit')
-            otherIcon?.classList.remove('rotate-180')
+            
+            otherButton.setAttribute('aria-expanded', 'false')
+            
+            if (otherContent) {
+              otherContent.classList.add('max-h-0')
+              otherContent.classList.remove('max-h-fit')
+            }
+            
+            if (otherIcon) {
+              otherIcon.classList.remove('rotate-180')
+            }
           }
         })
       })
     })
-  })
-  document.addEventListener('astro:after-swap', () => {
-    const accordionButtons = document.querySelectorAll('[data-accordion]')
-
-    accordionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const index = button.getAttribute('data-accordion')
-        const content = document.querySelector(`[data-content="${index}"]`)
-        const icon = button.querySelector('svg')
-
-        // Toggle current accordion
-        content?.classList.toggle('max-h-0')
-        content?.classList.toggle('max-h-fit')
-        icon?.classList.toggle('rotate-180')
-
-        // Close other accordions
-        accordionButtons.forEach(otherButton => {
-          if (otherButton !== button) {
-            const otherIndex = otherButton.getAttribute('data-accordion')
-            const otherContent = document.querySelector(
-              `[data-content="${otherIndex}"]`,
-            )
-            const otherIcon = otherButton.querySelector('svg')
-
-            otherContent?.classList.add('max-h-0')
-            otherContent?.classList.remove('max-h-fit')
-            otherIcon?.classList.remove('rotate-180')
-          }
-        })
-      })
-    })
-  })
-  document.addEventListener('astro:page-load', () => {
-    const accordionButtons = document.querySelectorAll('[data-accordion]')
-
-    accordionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const index = button.getAttribute('data-accordion')
-        const content = document.querySelector(`[data-content="${index}"]`)
-        const icon = button.querySelector('svg')
-
-        // Toggle current accordion
-        content?.classList.toggle('max-h-0')
-        content?.classList.toggle('max-h-fit')
-        icon?.classList.toggle('rotate-180')
-
-        // Close other accordions
-        accordionButtons.forEach(otherButton => {
-          if (otherButton !== button) {
-            const otherIndex = otherButton.getAttribute('data-accordion')
-            const otherContent = document.querySelector(
-              `[data-content="${otherIndex}"]`,
-            )
-            const otherIcon = otherButton.querySelector('svg')
-
-            otherContent?.classList.add('max-h-0')
-            otherContent?.classList.remove('max-h-fit')
-            otherIcon?.classList.remove('rotate-180')
-          }
-        })
-      })
-    })
-  })
-  document.addEventListener('DOMContentLoaded', () => {
-    const accordionButtons = document.querySelectorAll('[data-accordion]')
-
-    accordionButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const index = button.getAttribute('data-accordion')
-        const content = document.querySelector(`[data-content="${index}"]`)
-        const icon = button.querySelector('svg')
-
-        // Toggle current accordion
-        content?.classList.toggle('max-h-0')
-        content?.classList.toggle('max-h-fit')
-        icon?.classList.toggle('rotate-180')
-
-        // Close other accordions
-        accordionButtons.forEach(otherButton => {
-          if (otherButton !== button) {
-            const otherIndex = otherButton.getAttribute('data-accordion')
-            const otherContent = document.querySelector(
-              `[data-content="${otherIndex}"]`,
-            )
-            const otherIcon = otherButton.querySelector('svg')
-
-            otherContent?.classList.add('max-h-0')
-            otherContent?.classList.remove('max-h-fit')
-            otherIcon?.classList.remove('rotate-180')
-          }
-        })
-      })
-    })
-  })
+  }
+  
+  // Run on initial load
+  document.addEventListener('DOMContentLoaded', setupAccordions)
+  
+  // Run after Astro view transitions
+  document.addEventListener('astro:after-swap', setupAccordions)
+  
+  // Run on page load - this is important for mobile back navigation
+  document.addEventListener('astro:page-load', setupAccordions)
+  
+  // Also listen for history navigation events
+  window.addEventListener('popstate', setupAccordions)
 </script>

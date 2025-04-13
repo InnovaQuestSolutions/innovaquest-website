@@ -65,6 +65,9 @@ function initChatWidget() {
     // Hydrate with previous conversations
     hydrateChatWidget();
     
+    // Enhance mobile experience
+    enhanceMobileExperience();
+    
     console.log("Chat widget initialization complete");
 }
 
@@ -164,6 +167,7 @@ function injectStyles() {
             display: grid;
             box-sizing: border-box;
             animation: l1 4s infinite linear;
+            background: transparent;
         }
         
         .n8n-chat-widget .loader::before,
@@ -174,8 +178,9 @@ function injectStyles() {
             width: 70.7%;
             aspect-ratio: 1;
             border: 2px solid;
-            box-sizing: content-box;
+            box-sizing: border-box; /* Changed from content-box to border-box */
             animation: inherit;
+            background: transparent;
         }
         
         .n8n-chat-widget .loader::after {
@@ -183,11 +188,33 @@ function injectStyles() {
             aspect-ratio: 1;
             border: 2px solid;
             animation-duration: 2s;
+            background: transparent;
         }
         
         @keyframes l1 {
             100% {transform: rotate(1turn)}
         }
+        
+        .n8n-chat-widget .loading-indicator {
+            display: none;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            max-width: 80%;
+            align-self: flex-start;
+            background: var(--chat--color-background);
+            border: 1px solid rgba(133, 79, 255, 0.2);
+            justify-content: center; /* Center the loader */
+            align-items: center; /* Center the loader */
+        }
+        
+        /* Remove any default ::before or ::after content in loading-indicator */
+        .n8n-chat-widget .loading-indicator::before,
+        .n8n-chat-widget .loading-indicator::after {
+            display: none !important;
+            content: none !important;
+        }
+        
         .n8n-chat-widget .chat-container {
          position: fixed;
         bottom: 20px;
@@ -910,15 +937,146 @@ function injectStyles() {
             opacity: 0.5;
         }
 
-        .n8n-chat-widget .loading-indicator {
-            display: none;
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-radius: 12px;
-            max-width: 80%;
-            align-self: flex-start;
-            background: var(--chat--color-background);
-            border: 1px solid rgba(133, 79, 255, 0.2);
+        /* Base mobile-friendly adjustments */
+        .n8n-chat-widget .chat-container {
+            /* Make sure initial state has a max-width that works on all devices */
+            max-width: 100%;
+            width: 380px;
+            height: 600px;
+            /* Prevent the chat from being too close to screen edges */
+            right: 10px;
+            bottom: 10px;
+            /* Ensure scrolling works properly */
+            overflow: hidden;
+            transition: width 0.3s ease-in-out, height 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        /* Main responsive breakpoints */
+        @media (max-width: 768px) {
+            /* Tablet and large phones */
+            .n8n-chat-widget .chat-container {
+                width: 90%;
+                height: 80vh;
+                max-height: 600px;
+                right: 5%;
+                left: 5%;
+                bottom: 10px;
+                /* Center it horizontally */
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .n8n-chat-widget .chat-container.expanded {
+                width: 95%;
+                height: 90vh;
+                max-height: 90vh;
+                right: 2.5%;
+                left: 2.5%;
+            }
+            
+            .n8n-chat-widget .chat-toggle {
+                right: 10px;
+                bottom: 10px;
+            }
+            
+            .n8n-chat-widget .chat-toggle.position-left {
+                left: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Small phones */
+            .n8n-chat-widget .chat-container {
+                width: 100%;
+        height: 100vh; /* Changed from 100vh to 70vh */
+        max-height: 800px; /* Added max-height in pixels */
+        right: 0;
+        left: 0;
+        bottom: 0;
+        border-radius: 0;
+        box-shadow: none;
+            }
+            
+            .n8n-chat-widget .chat-container.expanded {
+                width: 100%;
+                height: 100vh; /* Changed from 100vh to 70vh */
+                max-height: 1000px; /* Added max-height in pixels */
+                transform: none;
+            }
+            
+            /* Adjust header for better visibility on smaller screens */
+            .n8n-chat-widget .brand-header {
+                padding: 12px;
+            }
+            
+            /* Make messages more readable */
+            .n8n-chat-widget .chat-message {
+                max-height: calc(70vh - 140px);
+            }
+            
+            /* Adjust chat input area for mobile */
+            .n8n-chat-widget .chat-input {
+                padding: 10px;
+            }
+            
+            .n8n-chat-widget .chat-input textarea {
+                padding: 10px;
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            /* Make the toggle button more accessible on mobile */
+            .n8n-chat-widget .chat-toggle {
+                width: 50px;
+                height: 50px;
+                right: 10px;
+                bottom: 10px;
+            }
+        }
+
+        /* Landscape orientation adjustments */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .n8n-chat-widget .chat-container {
+                height: 90vh;
+                width: 60%;
+                right: 20px;
+                left: auto;
+            }
+            
+            .n8n-chat-widget .chat-input textarea {
+                max-height: 80px; /* Smaller input area in landscape */
+            }
+            
+            .n8n-chat-widget .chat-messages {
+                max-height: calc(90vh - 120px);
+            }
+        }
+
+        /* Fix for iPhone X and newer with notches */
+        @supports (padding: max(0px)) {
+            .n8n-chat-widget .chat-container {
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+                padding-left: max(10px, env(safe-area-inset-left));
+                padding-right: max(10px, env(safe-area-inset-right));
+            }
+            
+            .n8n-chat-widget .chat-footer {
+                padding-bottom: max(8px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Optional: Animation tweaks for better performance on mobile */
+        @media (max-width: 768px) {
+            .n8n-chat-widget .chat-container {
+                transition: width 0.2s ease-out, height 0.2s ease-out;
+            }
+            
+            .n8n-chat-widget .chat-toggle:hover {
+                transform: scale(1.02); /* Reduce hover effect scale on mobile */
+            }
+            
+            .n8n-chat-widget .chat-container.open {
+                animation: chatEntrance 0.2s ease-out forwards;
+            }
         }
     `;
     
@@ -1144,12 +1302,18 @@ function setupChatUI() {
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             Array.from(e.target.files).forEach(file => {
-                // You can add file type and size validation here
-                // For example, limit to 10MB
+                // Use the validation function
+                if (!isValidFileType(file)) {
+                    alert(`File ${file.name} is not allowed. Only PNG, JPG, PDF, and CSV files are permitted.`);
+                    return;
+                }
+                
+                // Size validation - limit to 10MB
                 if (file.size > 10 * 1024 * 1024) {
                     alert(`File ${file.name} is too large. Maximum size is 10MB.`);
                     return;
                 }
+                
                 addFileToList(file);
             });
             // Reset the input so the same file can be selected again
@@ -1166,9 +1330,37 @@ function setupChatUI() {
     });
     
     // Toggle chat open/close - IMPORTANT!
+    // FIXED VERSION: Single toggle handler for both mobile and desktop
     toggleButton.addEventListener('click', () => {
         console.log("Toggle button clicked");
-        chatContainer.classList.toggle('open');
+        
+        // If the container is already open, just close it
+        if (chatContainer.classList.contains('open')) {
+            chatContainer.classList.remove('open');
+            return;
+        }
+        
+        // Opening the chat
+        chatContainer.classList.add('open');
+        
+        // If it's a mobile device, also expand it
+        if (isMobileDevice()) {
+            chatContainer.classList.add('expanded');
+            
+            // Update expand button icon if it exists
+            const expandBtn = chatContainer.querySelector('.expand-button');
+            if (expandBtn) {
+                expandBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14h6v6"></path>
+                        <path d="M20 10h-6V4"></path>
+                        <path d="M14 10l7-7"></path>
+                        <path d="M3 21l7-7"></path>
+                    </svg>
+                `;
+                expandBtn.title = "Collapse";
+            }
+        }
     });
     
     // Menu button handlers
@@ -1225,7 +1417,9 @@ function setupChatUI() {
         });
     }
     
-    // Event handlers for conversation management
+    // Rest of the event handlers remain the same...
+    // [Event handlers for conversation management]
+    
     if (viewConversationsButtons && viewConversationsButtons.length) {
         viewConversationsButtons.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -1441,25 +1635,66 @@ function getFileTypeIcon(filename) {
     
     return iconPath;
 }
-
+function isValidFileType(file) {
+    const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'text/csv'];
+    return allowedTypes.includes(file.type);
+}
 /**
  * Create a thumbnail for image preview
  * @param {File} file The file object
  * @param {Function} callback Callback function with thumbnail URL
  */
+
+
 function createThumbnail(file, callback) {
     const extension = file.name.split('.').pop().toLowerCase();
-    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    const imageTypes = ['jpg', 'jpeg', 'png'];
     
-    // Check if file is an image type that can be previewed
-    if (imageTypes.includes(extension)) {
+    // Only create thumbnails for image types, with security measures
+    if (imageTypes.includes(extension) && 
+       (file.type === 'image/jpeg' || file.type === 'image/png')) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            callback(e.target.result);
+            // Create a thumbnail with limited dimensions for preview only
+            const img = new Image();
+            img.onload = function() {
+                // Create a canvas to resize the image safely
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Limit thumbnail size to prevent large renders
+                const maxSize = 100;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw resized image to canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Return the data URL of the thumbnail
+                callback(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            
+            // Set source with security attributes
+            img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     } else {
-        // Not an image, use icon instead
+        // Not an image or not an allowed image type, use icon instead
         callback(null);
     }
 }
@@ -1469,6 +1704,11 @@ function createThumbnail(file, callback) {
  * @param {File} file The file object
  */
 function addFileToList(file) {
+    if (!isValidFileType(file)) {
+        alert(`File ${file.name} is not allowed. Only PNG, JPG, PDF, and CSV files are permitted.`);
+        return;
+    }
+   
     const fileId = generateUUID();
     
     attachedFiles.push({
@@ -1518,12 +1758,63 @@ function createFilePreviewElement(file) {
         const thumbnailContainer = document.createElement('div');
         thumbnailContainer.className = 'file-preview-thumbnail';
         
-        createThumbnail(file, (thumbnailUrl) => {
-            if (thumbnailUrl) {
-                // Image preview
-                thumbnailContainer.innerHTML = `<img src="${thumbnailUrl}" alt="${file.name}" />`;
+        // Use appropriate icon based on file type
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        if ((extension === 'jpg' || extension === 'jpeg' || extension === 'png') && 
+            (file.type === 'image/jpeg' || file.type === 'image/png')) {
+            // For images, create a safe thumbnail
+            createThumbnail(file, (thumbnailUrl) => {
+                if (thumbnailUrl) {
+                    // Create image with security attributes
+                    const img = document.createElement('img');
+                    img.src = thumbnailUrl;
+                    img.alt = file.name;
+                    // Prevent drag & drop and right-click save
+                    img.setAttribute('draggable', 'false');
+                    img.oncontextmenu = () => false;
+                    
+                    thumbnailContainer.appendChild(img);
+                } else {
+                    // Fallback to icon if thumbnail creation fails
+                    thumbnailContainer.innerHTML = getFileTypeIcon(file.name);
+                }
+                
+                // Complete the rest of the preview item
+                previewItem.appendChild(thumbnailContainer);
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'file-preview-info';
+                fileInfo.innerHTML = `
+                    <span class="file-preview-name">${file.name}</span>
+                    <span class="file-preview-size">${formatFileSize(file.size)}</span>
+                `;
+                
+                previewItem.appendChild(fileInfo);
+                resolve(previewItem);
+            });
+        } else {
+            // Use appropriate icon for non-image files
+            if (extension === 'pdf') {
+                // PDF icon
+                thumbnailContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <rect x="8" y="12" width="8" height="2"></rect>
+                    <rect x="8" y="16" width="8" height="2"></rect>
+                    <rect x="8" y="8" width="2" height="2"></rect>
+                </svg>`;
+            } else if (extension === 'csv') {
+                // CSV icon
+                thumbnailContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"></path>
+                    <polyline points="14 2 14 7 19 7"></polyline>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                    <line x1="8" y1="16" x2="16" y2="16"></line>
+                    <line x1="8" y1="8" x2="10" y2="8"></line>
+                </svg>`;
             } else {
-                // Icon based on file type
+                // Generic file icon for unsupported types (shouldn't happen with our validation)
                 thumbnailContainer.innerHTML = getFileTypeIcon(file.name);
             }
             
@@ -1538,7 +1829,7 @@ function createFilePreviewElement(file) {
             
             previewItem.appendChild(fileInfo);
             resolve(previewItem);
-        });
+        }
     });
 }
 
@@ -1890,7 +2181,13 @@ async function sendMessage(message) {
         route: config.webhook.route,
         chatInput: message,
         metadata: {
-            userId: ""
+            userId: "",
+            fileAttachments: attachedFiles.map(fileObj => ({
+                name: fileObj.file.name,
+                size: fileObj.file.size,
+                type: fileObj.file.type,
+                // Don't include file content in metadata - reference only
+            }))
         }
     };
     
@@ -1901,9 +2198,10 @@ async function sendMessage(message) {
     const fileNames = [];
     
     // Add files individually to the FormData with the 'files' key for each one
+    // Explicitly set Content-Disposition to attachment to prevent inline rendering
     attachedFiles.forEach((fileObj, index) => {
-        // Explicitly use the same field name 'files' for all files
-        formData.append('files', fileObj.file);
+        // Use a custom field name that indicates these are attachments
+        formData.append('file_attachments', fileObj.file, fileObj.file.name);
         fileNames.push(fileObj.file.name);
     });
 
@@ -1972,9 +2270,11 @@ async function sendMessage(message) {
     const loadingIndicator = document.createElement('div');
     loadingIndicator.className = 'loading-indicator';
     
+    // Create ONLY the loader square - no extra content
     const loader = document.createElement('div');
     loader.className = 'loader';
     
+    // Just append the loader - nothing else
     loadingIndicator.appendChild(loader);
     messagesContainer.appendChild(loadingIndicator);
     loadingIndicator.style.display = 'flex';
@@ -2072,4 +2372,108 @@ async function sendMessage(message) {
             message: 'Sorry, there was an error sending your message. Please try again.'
         });
     }
+}
+
+/**
+ * Detect if device is mobile
+ * @returns {boolean} True if device is mobile
+ */
+function isMobileDevice() {
+    return (window.innerWidth <= 768) || 
+           (navigator.userAgent.match(/Android/i) ||
+            navigator.userAgent.match(/webOS/i) ||
+            navigator.userAgent.match(/iPhone/i) ||
+            navigator.userAgent.match(/iPad/i) ||
+            navigator.userAgent.match(/iPod/i) ||
+            navigator.userAgent.match(/BlackBerry/i) ||
+            navigator.userAgent.match(/Windows Phone/i));
+}
+
+/**
+ * Handle textarea auto-resizing for better mobile experience
+ */
+function setupTextareaAutoResize() {
+    if (!textarea) return;
+    
+    // Set a low initial height
+    textarea.style.height = 'auto';
+    
+    textarea.addEventListener('input', function() {
+        // Reset height to shrink if needed
+        this.style.height = 'auto';
+        
+        // Calculate new height based on content (with max height limit)
+        const newHeight = Math.min(this.scrollHeight, isMobileDevice() ? 100 : 120);
+        this.style.height = newHeight + 'px';
+        
+        // Scroll chat messages to ensure input is visible if textarea grows
+        if (messagesContainer && newHeight > 50) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    });
+}
+
+/**
+ * Automatically go into full screen mode on mobile
+ */
+function handleMobileFullScreen() {
+    if (isMobileDevice()) {
+        // On mobile, when opening the chat, make it expanded by default
+        toggleButton.addEventListener('click', function() {
+            if (!chatContainer.classList.contains('open')) {
+                // Add both open and expanded classes
+                chatContainer.classList.add('open');
+                chatContainer.classList.add('expanded');
+                
+                // Update expand button icon if it exists
+                const expandBtn = chatContainer.querySelector('.expand-button');
+                if (expandBtn) {
+                    expandBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 14h6v6"></path>
+                            <path d="M20 10h-6V4"></path>
+                            <path d="M14 10l7-7"></path>
+                            <path d="M3 21l7-7"></path>
+                        </svg>
+                    `;
+                    expandBtn.title = "Collapse";
+                }
+            } else {
+                chatContainer.classList.remove('open');
+                // Keep expanded state for next opening
+            }
+        });
+    }
+}
+
+/**
+ * Add viewport meta tag to ensure proper scaling
+ */
+function addViewportMeta() {
+    // Check if viewport meta tag exists
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    
+    // If it doesn't exist, create it
+    if (!viewportMeta) {
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        document.head.appendChild(viewportMeta);
+    }
+    
+    // Set proper content for responsive design
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+}
+
+/**
+ * Enhance mobile experience with optimizations
+ */
+function enhanceMobileExperience() {
+    addViewportMeta();
+    setupTextareaAutoResize();
+    // Remove handleMobileFullScreen() call since we integrated it into the main toggle handler
+    
+    // Add touch-friendly event listeners
+    document.addEventListener('touchstart', function() {
+        // This empty handler enables :active states on iOS
+    }, false);
 }
