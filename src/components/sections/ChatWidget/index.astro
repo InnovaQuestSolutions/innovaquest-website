@@ -1,0 +1,31 @@
+---
+// Method 1: Import as raw text
+import chatbotScript from './chatbot.js?raw';
+---
+
+<div id="chat-widget-container"></div>
+
+<script is:inline>
+  window.ChatWidgetConfig = {
+    webhook: {
+      url: 'https://n8n.innovaquest.solutions/webhook/5f98907e-8002-48ca-b618-7b6fccfe9e5a/chat',
+      route: 'general'
+    },
+    branding: {
+      logo: 'https://www.innovaquest.ai/favicon.png',
+      name: 'InnovaQuest',
+      welcomeText: 'Hi 👋, how can we help?',
+      responseTimeText: 'We typically respond right away'
+    },
+    style: {
+      primaryColor: '#854fff',
+      secondaryColor: '#6b3fd4',
+      position: 'right',
+      backgroundColor: '#16131c',
+      fontColor: '#ffffff'
+    }
+  };
+</script>
+
+<!-- Use set:html to safely inject the script content -->
+<script is:inline set:html={chatbotScript}></script>

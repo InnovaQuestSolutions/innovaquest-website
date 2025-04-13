@@ -3,6 +3,8 @@ import Background from '../components/Background.astro'
 import Header from '../components/Header.astro'
 import Footer from '../components/molecules/Footer.astro'
 import '../styles/global.scss'
+import ChatWidget from '../components/sections/ChatWidget/index.astro'
+
 interface Props {
   title: string;
   description?: string; // Add optional description prop
@@ -84,11 +86,11 @@ import { ClientRouter } from 'astro:transitions'
         "description": "${description}"
       }
     </script>
-    
+
     <ClientRouter fallback="none" />
 
 
-
+    <ChatWidget />
 
 
 
