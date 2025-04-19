@@ -1,6 +1,6 @@
 /**
  * n8n Chat Widget
- * A customizable chat widget that can be embedded in any website
+ * A customizable chat widget that can be embedded in any Astro website
  * Handles conversations, file attachments, and markdown rendering
  */
 
@@ -89,25 +89,25 @@ function loadConfig() {
     // Default configuration
     const defaultConfig = {
         webhook: {
-            url: '',
-            route: ''
+            url: 'https://n8n.innovaquest.solutions/webhook/bd6697b2-4dc2-4943-a4d4-f3bc38d15092',
+            route: 'general'
         },
         branding: {
-            logo: '',
-            name: '',
-            welcomeText: '',
-            responseTimeText: '',
+            logo: 'https://play-lh.googleusercontent.com/h61OpMEtKOlyfeGsub4-rSDxsNdFtBLVtBpHSVdO-dma43qBVTuj2bsWkUcDuItc',
+            name: 'InnovaQuest',
+            welcomeText: 'Hi 👋, how can we help?',
+            responseTimeText: 'Find out how we can help you',
             poweredBy: {
                 text: 'Powered by InnovaQuest',
                 link: 'https://innovaquest.ai'
             }
         },
         style: {
-            primaryColor: '',
-            secondaryColor: '',
+            primaryColor: '#854fff',
+            secondaryColor: '#6b3fd4',
             position: 'right',
-            backgroundColor: '#ffffff',
-            fontColor: '#333333'
+            backgroundColor: '#16131c',
+            fontColor: '#ffffff'
         }
     };
     
@@ -124,15 +124,18 @@ function loadConfig() {
  * Load external resources (fonts, highlight.js, marked)
  */
 function loadExternalResources() {
-    // Load Geist font
+    // Load Rajdhani font
     const fontLink = document.createElement('link');
     fontLink.rel = 'stylesheet';
-    fontLink.href = 'https://cdn.jsdelivr.net/npm/geist@1.0.0/dist/fonts/geist-sans/style.css';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;700&display=swap';
     document.head.appendChild(fontLink);
     
     // Load Marked.js for Markdown parsing
     const markedScript = document.createElement('script');
     markedScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js';
+    markedScript.onload = function() {
+        console.log('Marked.js loaded successfully');
+    };
     document.head.appendChild(markedScript);
     
     // Highlight.js for code syntax highlighting
@@ -143,6 +146,9 @@ function loadExternalResources() {
     
     const highlightJsScript = document.createElement('script');
     highlightJsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js';
+    highlightJsScript.onload = function() {
+        console.log('Highlight.js loaded successfully');
+    };
     document.head.appendChild(highlightJsScript);
 }
 
@@ -152,17 +158,387 @@ function loadExternalResources() {
 function injectStyles() {
     const styles = `
         .n8n-chat-widget {
-            --chat--color-primary: var(--n8n-chat-primary-color, ${config.style.primaryColor || '#854fff'});
-            --chat--color-secondary: var(--n8n-chat-secondary-color, ${config.style.secondaryColor || '#6b3fd4'});
-            --chat--color-background: var(--n8n-chat-background-color, ${config.style.backgroundColor || '#ffffff'});
-            --chat--color-font: var(--n8n-chat-font-color, ${config.style.fontColor || '#333333'});
-            font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            --chat-primary: ${config.style.primaryColor};
+            --chat-secondary: ${config.style.secondaryColor};
+            --chat-bg: ${config.style.backgroundColor};
+            --chat-text: ${config.style.fontColor};
+            --chat-shadow: rgba(0, 0, 0, 0.2);
+            --chat-border: rgba(133, 79, 255, 0.2);
+            font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--chat-text);
+            line-height: 1.5;
+            font-size: 14px;
         }
 
+        /* Chat toggle button */
+        .n8n-chat-widget .chat-toggle {
+            position: fixed;
+            bottom: 20px;
+            ${config.style.position}: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-secondary) 100%);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(133, 79, 255, 0.3);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            color: white;
+        }
+
+        /* Persistent glowing effect for toggle button */
+        .n8n-chat-widget .chat-toggle {
+            box-shadow: 0 0 0 rgba(178, 197, 253, 0.3); 
+            animation: pulse 4s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0.6); /* Increased opacity */
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(133, 79, 255, 0); /* Increased spread from 10px to 20px */
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0);
+            }
+        }
+
+        /* Hide toggle button when chat is open */
+        .n8n-chat-widget.chat-open .chat-toggle {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .n8n-chat-widget .chat-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 24px rgba(133, 79, 255, 0.4);
+        }
+
+        .n8n-chat-widget .chat-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* Main chat container */
+        .n8n-chat-widget .chat-container {
+            position: fixed;
+            bottom: 20px;
+            ${config.style.position}: 20px;
+            width: 380px;
+            height: 600px;
+            max-height: 600px;
+            background: var(--chat-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px var(--chat-shadow);
+            border: 1px solid var(--chat-border);
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            z-index: 999998;
+            transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .n8n-chat-widget .chat-container.open {
+            display: flex;
+            animation: chat-fade-in 0.3s ease forwards;
+            box-shadow: 0 5px 15px rgba(178, 197, 253, 0.3);
+        }
+
+        .n8n-chat-widget .chat-container.expanded {
+            width: 700px;
+            height: 900px;
+            max-height: 85vh;
+            box-shadow: 0 5px 15px rgba(178, 197, 253, 0.3);
+        }
+
+        @keyframes chat-fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .n8n-chat-widget .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--chat-border);
+            z-index: 10;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-header-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .n8n-chat-widget .chat-header-title {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .n8n-chat-widget .chat-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .n8n-chat-widget .chat-header-button {
+            background: none;
+            border: none;
+            color: var(--chat-text);
+            opacity: 0.7;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .n8n-chat-widget .chat-header-button:hover {
+            opacity: 1;
+            background-color: rgba(133, 79, 255, 0.1);
+        }
+
+        .n8n-chat-widget .chat-header-button svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+        }
+
+        /* Menu dropdown */
+        .n8n-chat-widget .chat-menu {
+            position: relative;
+        }
+
+        .n8n-chat-widget .chat-menu-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 220px;
+            background: var(--chat-bg);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--chat-border);
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+            margin-top: 8px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-menu-dropdown.show {
+            display: block;
+            animation: dropdown-fade-in 0.2s ease forwards;
+        }
+
+        /* Make menu toggle 100% visible when menu is open */
+        .n8n-chat-widget .chat-menu-toggle.active,
+        .n8n-chat-widget .chat-menu-dropdown.show ~ .chat-menu-toggle {
+            opacity: 1 !important;
+        }
+
+        @keyframes dropdown-fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .n8n-chat-widget .chat-menu-item {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-menu-item:hover {
+            background: rgba(133, 79, 255, 0.1);
+        }
+
+        .n8n-chat-widget .chat-menu-item svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--chat-text);
+        }
+
+        .n8n-chat-widget .chat-menu-divider {
+            height: 1px;
+            background: var(--chat-border);
+            margin: 6px 0;
+        }
+
+        /* Chat views container */
+        .n8n-chat-widget .chat-views {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Welcome view */
+        .n8n-chat-widget .chat-welcome {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+            display: none; /* Hide by default, show only when needed */
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-welcome-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-welcome-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 12px rgba(133, 79, 255, 0.2);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-welcome-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(133, 79, 255, 0.3);
+        }
+
+        .n8n-chat-widget .chat-welcome-response {
+            font-size: 14px;
+            opacity: 0.7;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Chat messages view */
+        .n8n-chat-widget .chat-messages-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+        }
+
+        .n8n-chat-widget .chat-messages-view.active {
+            display: flex;
+        }
+
+        .n8n-chat-widget .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .n8n-chat-widget .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .n8n-chat-widget .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .n8n-chat-widget .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(133, 79, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .n8n-chat-widget .chat-message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            margin-bottom: 4px;
+            animation: message-fade-in 0.3s ease forwards;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        @keyframes message-fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .n8n-chat-widget .chat-message.user {
+            align-self: flex-end;
+        }
+
+        .n8n-chat-widget .chat-message.bot {
+            align-self: flex-start;
+        }
+
+        .n8n-chat-widget .chat-message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: transform 0.2s ease;
+            width: auto;
+            display: inline-block;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-message-bubble:hover {
+            transform: translateY(-2px);
+        }
+
+        .n8n-chat-widget .chat-message.user .chat-message-bubble {
+            background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-secondary) 100%);
+            color: white;
+            border-top-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .n8n-chat-widget .chat-message.bot .chat-message-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--chat-border);
+            border-top-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .n8n-chat-widget .chat-message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+            align-self: flex-end;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-message.bot .chat-message-time {
+            align-self: flex-start;
+        }
+
+        /* Square Loading indicator */
         .n8n-chat-widget .loader {
             width: 20px;
             aspect-ratio: 1;
-            color: var(--chat--color-primary);
+            color: var(--chat-primary);
             border: 2px solid;
             display: grid;
             box-sizing: border-box;
@@ -178,7 +554,7 @@ function injectStyles() {
             width: 70.7%;
             aspect-ratio: 1;
             border: 2px solid;
-            box-sizing: border-box; /* Changed from content-box to border-box */
+            box-sizing: border-box;
             animation: inherit;
             background: transparent;
         }
@@ -202,297 +578,67 @@ function injectStyles() {
             border-radius: 12px;
             max-width: 80%;
             align-self: flex-start;
-            background: var(--chat--color-background);
-            border: 1px solid rgba(133, 79, 255, 0.2);
-            justify-content: center; /* Center the loader */
-            align-items: center; /* Center the loader */
-        }
-        
-        /* Remove any default ::before or ::after content in loading-indicator */
-        .n8n-chat-widget .loading-indicator::before,
-        .n8n-chat-widget .loading-indicator::after {
-            display: none !important;
-            content: none !important;
-        }
-        
-        .n8n-chat-widget .chat-container {
-         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: none;
-        width: 380px;
-        height: 600px;
-        background: var(--chat--color-background);
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(133, 79, 255, 0.15);
-        border: 1px solid rgba(133, 79, 255, 0.2);
-        overflow: hidden;
-        font-family: inherit;
-        
-        /* Add smooth transitions */
-        transition: width 0.3s ease-in-out, height 0.3s ease-in-out, transform 0.3s ease-in-out;
-    
-        }
-    
-        .n8n-chat-widget .chat-container.expanded {
-       width: 600px;  /* More modest width increase */
-        height: 90vh;  /* Significant vertical expansion - 90% of viewport height */
-        max-height: 900px; /* Maximum height cap for very large screens */
-        transform: translateY(-5vh); /* Slight upward shift to center better vertically */
-        box-shadow: 0 12px 48px rgba(133, 79, 255, 0.25); /* Enhanced shadow */
-            
-        }
-    .n8n-chat-widget .chat-container.expanded .chat-messages {
-        flex: 1;
-        max-height: calc(90vh - 140px); /* Account for header and input area */
-    }
-        .n8n-chat-widget .chat-container.position-left {
-            right: auto;
-            left: 20px;
-        }
-    
-        .n8n-chat-widget .chat-container.open {
-            display: flex;
-        flex-direction: column;
-        animation: chatEntrance 0.3s ease-out forwards;
-        }
-    
-        .n8n-chat-widget .brand-header {
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid rgba(133, 79, 255, 0.1);
-            position: relative;
-            z-index: 200;
-        }
-    
-        .n8n-chat-widget .header-actions {
-            display: flex;
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            gap: 16px;
-        }
-    
-        .n8n-chat-widget .header-button {
-            background: none;
-            border: none;
-            color: var(--chat--color-font);
-            cursor: pointer;
-            padding: 4px 8px;
-            display: flex;
-            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--chat-border);
             justify-content: center;
-            transition: all 0.2s;
-            font-size: 20px;
-            opacity: 1; /* Full visibility */
-            border-radius: 4px;
-        }
-    
-    
-        .n8n-chat-widget .header-button:hover {
-            background-color: rgba(133, 79, 255, 0.2); /* Add background color on hover */
-            opacity: 1;
-        }
-    @keyframes chatEntrance {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-        .n8n-chat-widget .menu-button {
-            position: relative;
-            font-size: 18px;
-            font-weight: normal; /* Remove bold */
-        }
-    
-        .n8n-chat-widget .menu-dropdown {
-            position: absolute;
-            right: 0;
-            top: 100%;
-            background-color: #16131c; /* Use the exact background color instead of variable */
-            border-radius: 8px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5); /* Deeper shadow */
-            z-index: 100;
-            display: none;
-            width: 200px;
-            margin-top: 8px;
-            padding: 6px 0;
-            border: 1px solid rgba(133, 79, 255, 0.3);
-            /* Ensure complete opacity */
-            opacity: 1;
-        }
-    
-        .n8n-chat-widget .menu-dropdown.show {
-            display: block;
-            background-color: #16131c;
-            z-index: 200;
-        }
-    
-       .n8n-chat-widget .menu-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            color: var(--chat--color-font);
-            transition: background 0.2s;
-            font-size: 14px;
-            display: flex;
             align-items: center;
-            gap: 12px;
-            background-color: #16131c; /* Same as menu background */
-            position: relative;
-            z-index: 2;
         }
-      .n8n-chat-widget .menu-divider {
-            height: 1px;
-            background-color: rgba(133, 79, 255, 0.3);
-            margin: 6px 0;
-        }
-    
-         .n8n-chat-widget .menu-item:hover {
-            background-color: #221d2d; /* Slightly lighter than background */
-        }
-    
-        .n8n-chat-widget .close-button {
-            position: relative;
-            background: none;
-            border: none;
-            color: var(--chat--color-font);
-            cursor: pointer;
-            padding: 4px;
+
+        /* Input area */
+        .n8n-chat-widget .chat-input {
+            padding: 15px;
+            border-top: 1px solid var(--chat-border);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.2s;
-            font-size: 20px;
-            opacity: 0.6;
-        }
-    
-        .n8n-chat-widget .close-button:hover {
-            opacity: 1;
-        }
-    
-        .n8n-chat-widget .brand-header img {
-            width: 32px;
-            height: 32px;
-        }
-    
-        .n8n-chat-widget .brand-header span {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--chat--color-font);
-        }
-    
-        .n8n-chat-widget .new-conversation {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px;
-            text-align: center;
-            width: 100%;
-            max-width: 300px;
-        }
-    
-        .n8n-chat-widget .welcome-text {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--chat--color-font);
-            margin-bottom: 24px;
-            line-height: 1.3;
-        }
-    
-        .n8n-chat-widget .new-chat-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             gap: 8px;
-            width: 100%;
-            padding: 16px 24px;
-            background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
-            color: white;
-            border: none;
+        }
+
+        .n8n-chat-widget .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .n8n-chat-widget .chat-input-field {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--chat-border);
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: transform 0.3s;
-            font-weight: 500;
-            font-family: inherit;
-            margin-bottom: 12px;
-        }
-    
-        .n8n-chat-widget .new-chat-btn:hover {
-            transform: scale(1.02);
-        }
-    
-        .n8n-chat-widget .message-icon {
-            width: 20px;
-            height: 20px;
-        }
-    
-        .n8n-chat-widget .response-text {
+            color: var(--chat-text);
+            font-family: 'Rajdhani', sans-serif;
             font-size: 14px;
-            color: var(--chat--color-font);
-            opacity: 0.7;
-            margin: 0;
+            resize: none;
+            height: 44px;
+            max-height: 150px;
+            overflow-y: hidden;
+            transition: border-color 0.2s ease, background 0.2s ease;
         }
-    
-        .n8n-chat-widget .chat-interface {
+
+        .n8n-chat-widget .chat-input-field:focus {
+            outline: none;
+            border-color: var(--chat-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .n8n-chat-widget .chat-input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .file-input {
+            display: none;
+        }
+
+        .n8n-chat-widget .file-list {
             display: none;
             flex-direction: column;
-            height: calc(100% - 60px); /* Adjust height to account for header */
-        }
-    
-        .n8n-chat-widget .chat-interface.active {
-            display: flex;
-        }
-    
-        .n8n-chat-widget .chat-messages {
-            flex: 1;
+            gap: 4px;
+            max-height: 100px;
             overflow-y: auto;
-            padding: 20px;
-            background: var(--chat--color-background);
-            display: flex;
-            flex-direction: column;
+            padding: 4px 0;
         }
-    
-        .n8n-chat-widget .chat-message {
-            padding: 12px 16px;
-            margin: 8px 0;
-            border-radius: 12px;
-            max-width: 80%;
-            word-wrap: break-word;
-            font-size: 14px;
-            line-height: 1.5;
-            width: fit-content;
-        }
-    
-        .n8n-chat-widget .chat-message.user {
-            background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
-            color: white;
-            align-self: flex-end;
-            box-shadow: 0 4px 12px rgba(133, 79, 255, 0.2);
-            border: none;
-        }
-    
-        .n8n-chat-widget .chat-message.bot {
-            background: var(--chat--color-background);
-            border: 1px solid rgba(133, 79, 255, 0.2);
-            color: var(--chat--color-font);
-            align-self: flex-start;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            width: auto;
-            max-width: 80%;
-        }
-    
-        .n8n-chat-widget .chat-message .timestamp {
-            font-size: 10px;
-            opacity: 0.6;
-            margin-top: 4px;
-            text-align: right;
-            z-index: 1;
-        }
-    
+
         .n8n-chat-widget .file-attachment {
             background: rgba(133, 79, 255, 0.2);
             border-radius: 8px;
@@ -503,28 +649,31 @@ function injectStyles() {
             gap: 8px;
             font-size: 13px;
             color: white;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-icon {
             width: 20px;
             height: 20px;
-            fill: var(--chat--color-primary);
+            fill: var(--chat-primary);
         }
-    
+
         .n8n-chat-widget .file-name {
             flex: 1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             color: white;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-size {
             font-size: 11px;
             opacity: 0.7;
             color: white;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-remove {
             background: none;
             border: none;
@@ -534,20 +683,63 @@ function injectStyles() {
             opacity: 0.6;
             font-size: 14px;
         }
-    
+
         .n8n-chat-widget .file-remove:hover {
             opacity: 1;
         }
-    
-        .n8n-chat-widget .file-list {
+
+        .n8n-chat-widget .chat-attachment-button {
+            background: none;
+            border: none;
+            color: var(--chat-text);
+            opacity: 0.7;
+            cursor: pointer;
+            width: 24px;
+            height: 44px;
             display: flex;
-            flex-direction: column;
-            gap: 4px;
-            max-height: 100px;
-            overflow-y: auto;
-            padding: 4px 0;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0 5px;
+            transition: opacity 0.2s;
+            align-self: flex-end;
         }
-    
+
+        .n8n-chat-widget .chat-attachment-button:hover {
+            opacity: 1;
+        }
+
+        .n8n-chat-widget .chat-attachment-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .n8n-chat-widget .chat-input-button {
+            background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 9999px; /* full pill shape */
+  padding: 6px 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  height: 36px;
+  letter-spacing: 1px;
+  font-size: 14px;
+  font-family: 'Rajdhani', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  margin-bottom: 4px;
+        }
+
+        .n8n-chat-widget .chat-input-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(133, 79, 255, 0.3);
+        }
+
         /* File preview styles */
         .n8n-chat-widget .file-preview {
             margin-top: 8px;
@@ -555,7 +747,7 @@ function injectStyles() {
             flex-direction: column;
             gap: 8px;
         }
-    
+
         .n8n-chat-widget .file-preview-item {
             display: flex;
             align-items: center;
@@ -563,8 +755,9 @@ function injectStyles() {
             padding: 8px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-preview-thumbnail {
             width: 40px;
             height: 40px;
@@ -576,513 +769,324 @@ function injectStyles() {
             justify-content: center;
             overflow: hidden;
         }
-    
+
         .n8n-chat-widget .file-preview-thumbnail img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-    
+
         .n8n-chat-widget .file-preview-icon {
             width: 24px;
             height: 24px;
         }
-    
+
         .n8n-chat-widget .file-preview-info {
             flex: 1;
             display: flex;
             flex-direction: column;
             font-size: 12px;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-preview-name {
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
         .n8n-chat-widget .file-preview-size {
             opacity: 0.7;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
-        /* Markdown Styling */
-        .n8n-chat-widget .bot-markdown h1,
-        .n8n-chat-widget .bot-markdown h2,
-        .n8n-chat-widget .bot-markdown h3,
-        .n8n-chat-widget .bot-markdown h4,
-        .n8n-chat-widget .bot-markdown h5,
-        .n8n-chat-widget .bot-markdown h6 {
-            margin-top: 1em;
-            margin-bottom: 0.5em;
-            font-weight: 600;
-            line-height: 1.25;
-        }
-    
-        .n8n-chat-widget .bot-markdown h1 { font-size: 1.5em; }
-        .n8n-chat-widget .bot-markdown h2 { font-size: 1.3em; }
-        .n8n-chat-widget .bot-markdown h3 { font-size: 1.1em; }
-    
-        .n8n-chat-widget .bot-markdown p {
-            margin-top: 0;
-            margin-bottom: 1em;
-        }
-    
-        .n8n-chat-widget .bot-markdown ul,
-        .n8n-chat-widget .bot-markdown ol {
-            padding-left: 1.5em;
-            margin-bottom: 1em;
-        }
-    
-        .n8n-chat-widget .bot-markdown li {
-            margin-bottom: 0.25em;
-        }
-    
-        .n8n-chat-widget .bot-markdown code {
-            font-family: monospace;
-            background-color: rgba(133, 79, 255, 0.1);
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-size: 0.9em;
-            white-space: pre-wrap;
-        }
-    
-        .n8n-chat-widget .bot-markdown pre {
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 6px;
-            padding: 0.7em 1em;
-            overflow-x: auto;
-            margin: 1em 0;
-            max-width: 100%;
-        }
-    
-        .n8n-chat-widget .bot-markdown pre code {
-            background-color: transparent;
-            padding: 0;
-            white-space: pre;
-            color: #f8f8f2;
-            font-family: monospace;
-            display: block;
-        }
-    
-        .n8n-chat-widget .bot-markdown blockquote {
-            padding: 0 1em;
-            color: rgba(var(--chat--color-font), 0.8);
-            border-left: 4px solid var(--chat--color-primary);
-            margin: 0 0 1em;
-        }
-    
-        .n8n-chat-widget .bot-markdown a {
-            color: var(--chat--color-primary);
-            text-decoration: none;
-        }
-    
-        .n8n-chat-widget .bot-markdown a:hover {
-            text-decoration: underline;
-        }
-    
-        .n8n-chat-widget .bot-markdown table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: 1em;
-        }
-    
-        .n8n-chat-widget .bot-markdown th,
-        .n8n-chat-widget .bot-markdown td {
-            border: 1px solid rgba(133, 79, 255, 0.2);
-            padding: 0.5em;
-        }
-    
-        .n8n-chat-widget .bot-markdown th {
-            background-color: rgba(133, 79, 255, 0.1);
-            font-weight: 600;
-        }
-    
-        .n8n-chat-widget .chat-input {
-        padding: 16px;
-        background: var(--chat--color-background);
-        border-top: 1px solid rgba(133, 79, 255, 0.1);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        position: relative;
-        z-index: 5;
-    }
-    
-    
-       .n8n-chat-widget .input-area {
-        display: flex;
-        gap: 8px;
-        align-items: flex-start; /* Align to top instead of center */
-        position: relative;
-    }
-    
-       .n8n-chat-widget .chat-input textarea {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid rgba(133, 79, 255, 0.2);
-        border-radius: 8px;
-        background: var(--chat--color-background);
-        color: var(--chat--color-font);
-        resize: none;
-        font-family: inherit;
-        font-size: 14px;
-        min-height: 20px; /* Start with minimum height */
-        max-height: 120px; /* Set maximum height before scrolling */
-        height: auto; /* Allow height to adjust naturally */
-        overflow-y: auto; /* Enable vertical scrolling when needed */
-        line-height: 1.4; /* Improve text spacing */
-        transition: height 0.1s ease; /* Smooth transition for height changes */
-    }
-    
-        .n8n-chat-widget .chat-input textarea::placeholder {
-            color: var(--chat--color-font);
-            opacity: 0.6;
-        }
-    
-        .n8n-chat-widget .attachment-button {
-            background: none;
-        border: none;
-        color: var(--chat--color-font);
-        opacity: 0.7;
-        cursor: pointer;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s;
-        align-self: flex-start;
-        margin-top: 6px;
-        }
-    
-        .n8n-chat-widget .attachment-button:hover {
-            background: rgba(133, 79, 255, 0.1);
-            opacity: 1;
-        }
-    
-        .n8n-chat-widget .attachment-button svg {
-            width: 20px;
-            height: 20px;
-        }
-    
-        .n8n-chat-widget .file-input {
-            display: none;
-        }
-    
-        .n8n-chat-widget .chat-input button.send-button {
-            background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 0 20px;
-        cursor: pointer;
-        transition: transform 0.2s;
-        font-family: inherit;
-        font-weight: 500;
-        height: 36px;
-        align-self: flex-start;
-        margin-top: 6px;
-        }
-    
-        .n8n-chat-widget .chat-input button.send-button:hover {
-            transform: scale(1.05);
-        }
-    
-        .n8n-chat-widget .chat-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
-            background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(133, 79, 255, 0.3);
-            z-index: 999;
-            transition: transform 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-    
-        .n8n-chat-widget .chat-toggle.position-left {
-            right: auto;
-            left: 20px;
-        }
-    
-        .n8n-chat-widget .chat-toggle:hover {
-            transform: scale(1.05);
-        }
-    
-        .n8n-chat-widget .chat-toggle svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-    
+
+        /* Footer */
         .n8n-chat-widget .chat-footer {
-            padding: 8px;
+            padding: 10px;
             text-align: center;
-            background: var(--chat--color-background);
-            border-top: 1px solid rgba(133, 79, 255, 0.1);
-        }
-    
-        .n8n-chat-widget .chat-footer a {
-            color: var(--chat--color-primary);
-            text-decoration: none;
+            border-top: 1px solid var(--chat-border);
             font-size: 12px;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-            font-family: inherit;
+            font-family: 'Rajdhani', sans-serif;
         }
-    
+
+        .n8n-chat-widget .chat-footer a {
+            color: var(--chat-primary);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
         .n8n-chat-widget .chat-footer a:hover {
             opacity: 1;
         }
-    
-        .n8n-chat-widget .conversations-view {
+
+        /* Conversation view */
+        .n8n-chat-widget .chat-conversations-view {
             display: none;
             flex-direction: column;
-            height: calc(100% - 60px);
-            background: var(--chat--color-background);
-            overflow-y: auto;
-            {
-        transition: height 0.3s ease-in-out, max-height 0.3s ease-in-out;}
+            flex: 1;
+            width: 100%;
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .conversations-view.active {
+
+        .n8n-chat-widget .chat-conversations-view.active {
             display: flex;
         }
-        
-        .n8n-chat-widget .conversations-header {
+
+        .n8n-chat-widget .chat-conversations-header {
             padding: 16px;
-            border-bottom: 1px solid rgba(133, 79, 255, 0.1);
             font-weight: 500;
-            font-size: 16px;
-            color: var(--chat--color-font);
+            border-bottom: 1px solid var(--chat-border);
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .conversation-list {
-            display: flex;
-            flex-direction: column;
+
+        .n8n-chat-widget .chat-conversations-list {
+            flex: 1;
             overflow-y: auto;
         }
-        
-        .n8n-chat-widget .conversation-item {
+
+        .n8n-chat-widget .chat-conversation-item {
             display: flex;
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(133, 79, 255, 0.1);
+            padding: 16px;
+            border-bottom: 1px solid var(--chat-border);
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s ease;
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .conversation-item:hover {
-            background: rgba(133, 79, 255, 0.05);
-        }
-        
-        .n8n-chat-widget .conversation-item.active {
+
+        .n8n-chat-widget .chat-conversation-item:hover {
             background: rgba(133, 79, 255, 0.1);
         }
-        
-        .n8n-chat-widget .conversation-content {
+
+        .n8n-chat-widget .chat-conversation-item.active {
+            background: rgba(133, 79, 255, 0.15);
+        }
+
+        .n8n-chat-widget .chat-conversation-content {
             flex: 1;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
         }
-        
-        .n8n-chat-widget .conversation-title {
+
+        .n8n-chat-widget .chat-conversation-title {
             font-weight: 500;
-            color: var(--chat--color-font);
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .conversation-preview {
+
+        .n8n-chat-widget .chat-conversation-preview {
+            opacity: 0.7;
             font-size: 13px;
-            color: var(--chat--color-font);
-            opacity: 0.7;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .conversation-date {
+
+        .n8n-chat-widget .chat-conversation-time {
+            margin-left: 15px;
+            opacity: 0.6;
             font-size: 12px;
-            color: var(--chat--color-font);
-            opacity: 0.7;
-            margin-left: 12px;
             white-space: nowrap;
+            font-family: 'Rajdhani', sans-serif;
         }
-        
-        .n8n-chat-widget .empty-state {
+
+        .n8n-chat-widget .chat-empty-state {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
-            color: var(--chat--color-font);
-            opacity: 0.7;
+            padding: 30px;
             text-align: center;
-        }
-        
-        .n8n-chat-widget .empty-state svg {
-            margin-bottom: 16px;
-            opacity: 0.5;
+            font-family: 'Rajdhani', sans-serif;
         }
 
-        /* Base mobile-friendly adjustments */
-        .n8n-chat-widget .chat-container {
-            /* Make sure initial state has a max-width that works on all devices */
+        .n8n-chat-widget .chat-empty-icon {
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .n8n-chat-widget .chat-empty-text {
+            margin-bottom: 20px;
+            opacity: 0.7;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Markdown content styling */
+        .n8n-chat-widget .chat-markdown {
+            line-height: 1.6;
+            width: 100%;
+            overflow: auto;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown p {
+            margin: 0 0 12px 0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown p:last-child {
+            margin-bottom: 0;
+        }
+
+        .n8n-chat-widget .chat-markdown h1,
+        .n8n-chat-widget .chat-markdown h2,
+        .n8n-chat-widget .chat-markdown h3 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            line-height: 1.25;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown h1 {
+            font-size: 1.5em;
+            border-bottom: 1px solid var(--chat-border);
+            padding-bottom: 4px;
+        }
+
+        .n8n-chat-widget .chat-markdown h2 {
+            font-size: 1.3em;
+            border-bottom: 1px solid var(--chat-border);
+            padding-bottom: 4px;
+        }
+
+        .n8n-chat-widget .chat-markdown h3 {
+            font-size: 1.1em;
+        }
+
+        .n8n-chat-widget .chat-markdown ul,
+        .n8n-chat-widget .chat-markdown ol {
+            margin: 8px 0 16px 0;
+            padding-left: 20px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown li {
+            margin-bottom: 4px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown a {
+            color: #a58aff;
+            text-decoration: none;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown a:hover {
+            text-decoration: underline;
+        }
+
+        .n8n-chat-widget .chat-markdown blockquote {
+            border-left: 4px solid var(--chat-primary);
+            margin: 8px 0;
+            padding: 4px 0 4px 16px;
+            opacity: 0.8;
+            font-style: italic;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .n8n-chat-widget .chat-markdown pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 12px 0;
+            border-left: 3px solid var(--chat-primary);
+        }
+
+        .n8n-chat-widget .chat-markdown pre code {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            font-size: 0.9em;
+            color: #f8f8f2;
+            white-space: pre;
+        }
+
+        .n8n-chat-widget .chat-markdown table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown th,
+        .n8n-chat-widget .chat-markdown td {
+            border: 1px solid var(--chat-border);
+            padding: 8px;
+            text-align: left;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .n8n-chat-widget .chat-markdown th {
+            background: rgba(133, 79, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .n8n-chat-widget .chat-markdown img {
             max-width: 100%;
-            width: 380px;
-            height: 600px;
-            /* Prevent the chat from being too close to screen edges */
-            right: 10px;
-            bottom: 10px;
-            /* Ensure scrolling works properly */
-            overflow: hidden;
-            transition: width 0.3s ease-in-out, height 0.3s ease-in-out, transform 0.3s ease-in-out;
+            border-radius: 8px;
+            margin: 12px 0;
         }
 
-        /* Main responsive breakpoints */
-        @media (max-width: 768px) {
-            /* Tablet and large phones */
-            .n8n-chat-widget .chat-container {
-                width: 90%;
-                height: 80vh;
-                max-height: 600px;
-                right: 5%;
-                left: 5%;
-                bottom: 10px;
-                /* Center it horizontally */
-                margin-left: auto;
-                margin-right: auto;
-            }
-            
-            .n8n-chat-widget .chat-container.expanded {
-                width: 95%;
-                height: 90vh;
-                max-height: 90vh;
-                right: 2.5%;
-                left: 2.5%;
-            }
-            
-            .n8n-chat-widget .chat-toggle {
-                right: 10px;
-                bottom: 10px;
-            }
-            
-            .n8n-chat-widget .chat-toggle.position-left {
-                left: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            /* Small phones */
-            .n8n-chat-widget .chat-container {
-                width: 100%;
-        height: 100vh; /* Changed from 100vh to 70vh */
-        max-height: 800px; /* Added max-height in pixels */
-        right: 0;
-        left: 0;
-        bottom: 0;
-        border-radius: 0;
-        box-shadow: none;
-            }
-            
-            .n8n-chat-widget .chat-container.expanded {
-                width: 100%;
-                height: 100vh; /* Changed from 100vh to 70vh */
-                max-height: 1000px; /* Added max-height in pixels */
-                transform: none;
-            }
-            
-            /* Adjust header for better visibility on smaller screens */
-            .n8n-chat-widget .brand-header {
-                padding: 12px;
-            }
-            
-            /* Make messages more readable */
-            .n8n-chat-widget .chat-message {
-                max-height: calc(70vh - 140px);
-            }
-            
-            /* Adjust chat input area for mobile */
-            .n8n-chat-widget .chat-input {
-                padding: 10px;
-            }
-            
-            .n8n-chat-widget .chat-input textarea {
-                padding: 10px;
-                font-size: 16px; /* Prevent zoom on iOS */
-            }
-            
-            /* Make the toggle button more accessible on mobile */
-            .n8n-chat-widget .chat-toggle {
-                width: 50px;
-                height: 50px;
-                right: 10px;
-                bottom: 10px;
-            }
-        }
-
-        /* Landscape orientation adjustments */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .n8n-chat-widget .chat-container {
-                height: 90vh;
-                width: 60%;
-                right: 20px;
-                left: auto;
-            }
-            
-            .n8n-chat-widget .chat-input textarea {
-                max-height: 80px; /* Smaller input area in landscape */
-            }
-            
-            .n8n-chat-widget .chat-messages {
-                max-height: calc(90vh - 120px);
-            }
-        }
-
-        /* Fix for iPhone X and newer with notches */
-        @supports (padding: max(0px)) {
-            .n8n-chat-widget .chat-container {
-                padding-bottom: max(10px, env(safe-area-inset-bottom));
-                padding-left: max(10px, env(safe-area-inset-left));
-                padding-right: max(10px, env(safe-area-inset-right));
-            }
-            
-            .n8n-chat-widget .chat-footer {
-                padding-bottom: max(8px, env(safe-area-inset-bottom));
-            }
-        }
-
-        /* Optional: Animation tweaks for better performance on mobile */
+        /* Mobile styles */
         @media (max-width: 768px) {
             .n8n-chat-widget .chat-container {
-                transition: width 0.2s ease-out, height 0.2s ease-out;
-            }
-            
-            .n8n-chat-widget .chat-toggle:hover {
-                transform: scale(1.02); /* Reduce hover effect scale on mobile */
+                width: 100%;
+                height: 100vh;
+                bottom: 0;
+                ${config.style.position}: 0;
+                border-radius: 0;
+                border: none;
+                margin: 0;
+                max-height: 100vh;
             }
             
             .n8n-chat-widget .chat-container.open {
-                animation: chatEntrance 0.2s ease-out forwards;
+                transform: none;
+            }
+            
+            body.chat-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+            }
+            
+            .n8n-chat-widget .chat-header-button.expand-button {
+                display: none;
+            }
+            
+            .n8n-chat-widget .chat-messages {
+                max-height: calc(100vh - 150px);
+            }
+            
+            .n8n-chat-widget .chat-welcome-button,
+            .n8n-chat-widget .chat-input-button {
+                padding: 12px 24px;
+                font-size: 14px;
             }
         }
     `;
-    
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = styles;
-    document.head.appendChild(styleSheet);
+
+    const styleElement = document.createElement('style');
+    styleElement.textContent = styles;
+    document.head.appendChild(styleElement);
 }
 
 /**
@@ -1094,39 +1098,42 @@ function createWidgetDOM() {
     // Create widget container
     const widgetContainer = document.createElement('div');
     widgetContainer.className = 'n8n-chat-widget';
-    widgetContainer.id = 'n8n-chat-widget';
     
-    // Set CSS variables for colors
-    widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
-    widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
+    // Chat container
+    const chatContainer = document.createElement('div');
+    chatContainer.className = 'chat-container';
     
-    // Single unified HTML structure with a common header
-    const chatWidgetHTML = `
-        <div class="brand-header">
-            <img src="${config.branding.logo || ''}" alt="${config.branding.name || 'Chat'}">
-            <span>${config.branding.name || 'Chat'}</span>
-            <div class="header-actions">
-                <button class="header-button menu-button" title="Menu">
-                    &bull;&bull;&bull;
-                    <div class="menu-dropdown">
-                        <div class="menu-item new-conversation-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    // Header
+    const header = document.createElement('div');
+    header.className = 'chat-header';
+    header.innerHTML = `
+        <img src="${config.branding.logo}" alt="${config.branding.name}" class="chat-header-logo">
+        <div class="chat-header-title">${config.branding.name}</div>
+        <div class="chat-header-actions">
+            <div class="chat-menu">
+                <button class="chat-header-button chat-menu-toggle" title="Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="19" cy="12" r="1"></circle>
+                        <circle cx="5" cy="12" r="1"></circle>
+                    </svg>
+                    <div class="chat-menu-dropdown">
+                        <div class="chat-menu-item chat-new-conversation">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                             New conversation
                         </div>
-                        <div class="menu-item view-conversations-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                        <div class="chat-menu-item chat-view-conversations">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                             </svg>
                             View conversations
                         </div>
-                        <div class="menu-divider"></div>
-                        <div class="menu-item download-transcript">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <div class="chat-menu-divider"></div>
+                        <div class="chat-menu-item chat-download-transcript">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -1135,89 +1142,101 @@ function createWidgetDOM() {
                         </div>
                     </div>
                 </button>
-                <button class="header-button expand-button" title="Expand">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 3h6v6"></path>
-                        <path d="M9 21H3v-6"></path>
-                        <path d="M21 3l-7 7"></path>
-                        <path d="M3 21l7-7"></path>
+            </div>
+            <button class="chat-header-button expand-button" title="Expand">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h6v6"></path>
+                    <path d="M9 21H3v-6"></path>
+                    <path d="M21 3l-7 7"></path>
+                    <path d="M3 21l7-7"></path>
+                </svg>
+            </button>
+            <button class="chat-header-button close-button" title="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    // Views container
+    const viewsContainer = document.createElement('div');
+    viewsContainer.className = 'chat-views';
+    
+    // Welcome view
+    const welcomeView = document.createElement('div');
+    welcomeView.className = 'chat-welcome';
+    welcomeView.innerHTML = `
+        <h2 class="chat-welcome-title">${config.branding.welcomeText}</h2>
+        <button class="chat-welcome-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            See How We Can Help
+        </button>
+        <p class="chat-welcome-response">${config.branding.responseTimeText}</p>
+    `;
+    
+    // Chat messages view
+    const messagesView = document.createElement('div');
+    messagesView.className = 'chat-messages-view';
+    messagesView.innerHTML = `
+        <div class="chat-messages"></div>
+        <div class="chat-input">
+            <div class="file-list"></div>
+            <div class="input-area">
+                <textarea class="chat-input-field" placeholder="Type your message..." rows="1"></textarea>
+                <button class="chat-attachment-button" title="Attach file">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                     </svg>
                 </button>
-                <button class="close-button" title="Close">&times;</button>
+                <input type="file" class="file-input" multiple>
+                <button class="chat-input-button">Send</button>
             </div>
         </div>
-        
-        <div class="new-conversation">
-            <h2 class="welcome-text">${config.branding.welcomeText || 'Welcome! How can we help you today?'}</h2>
-            <button class="new-chat-btn">
-                <svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/>
-                </svg>
-                Send us a message
-            </button>
-            <p class="response-text">${config.branding.responseTimeText || 'We typically reply within a few minutes.'}</p>
-        </div>
-        
-        <div class="chat-interface">
-            <div class="chat-messages"></div>
-            <div class="chat-input">
-                <div class="file-list"></div>
-                <div class="input-area">
-                    <textarea placeholder="Type your message here..." rows="1"></textarea>
-                    <button class="attachment-button" title="Attach file">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
-                        </svg>
-                    </button>
-                    <input type="file" class="file-input" multiple>
-                    <button type="submit" class="send-button">Send</button>
-                </div>
-            </div>
-            <div class="chat-footer">
-                <a href="${config.branding.poweredBy?.link || '#'}" target="_blank">${config.branding.poweredBy?.text || 'Powered by Chat'}</a>
-            </div>
+        <div class="chat-footer">
+            <a href="${config.branding.poweredBy.link}" target="_blank">${config.branding.poweredBy.text}</a>
         </div>
     `;
     
-    // Add conversations view to the chat container
-    const conversationsViewHTML = `
-        <div class="conversations-view">
-            <div class="conversations-header">Recent conversations</div>
-            <div class="conversation-list">
-                <!-- Conversation items will be added here dynamically -->
-            </div>
-        </div>
+    // Conversations view
+    const conversationsView = document.createElement('div');
+    conversationsView.className = 'chat-conversations-view';
+    conversationsView.innerHTML = `
+        <div class="chat-conversations-header">Recent conversations</div>
+        <div class="chat-conversations-list"></div>
     `;
     
-    const chatContainer = document.createElement('div');
-    chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
-    chatContainer.innerHTML = chatWidgetHTML + conversationsViewHTML;
+    // Assemble the widget
+    viewsContainer.appendChild(welcomeView);
+    viewsContainer.appendChild(messagesView);
+    viewsContainer.appendChild(conversationsView);
     
+    chatContainer.appendChild(header);
+    chatContainer.appendChild(viewsContainer);
+    
+    // Toggle button
     const toggleButton = document.createElement('button');
-    toggleButton.className = `chat-toggle${config.style.position === 'left' ? ' position-left' : ''}`;
+    toggleButton.className = 'chat-toggle';
     toggleButton.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.476 0-2.886-.313-4.156-.878l-3.156.586.586-3.156A7.962 7.962 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/>
-        </svg>`;
+        </svg>
+    `;
     
     widgetContainer.appendChild(chatContainer);
     widgetContainer.appendChild(toggleButton);
     document.body.appendChild(widgetContainer);
     
     console.log("Chat widget DOM created");
-    
-    // Initialize DOM element references
-    if (!initDOMReferences()) {
-        console.error("Failed to initialize DOM references");
-    }
 }
 
 /**
  * Initialize DOM element references
  */
 function initDOMReferences() {
-    console.log("Initializing DOM references");
-    
     // Get DOM elements from the widget container
     const widgetContainer = document.querySelector('.n8n-chat-widget');
     if (!widgetContainer) {
@@ -1225,36 +1244,23 @@ function initDOMReferences() {
         return false;
     }
     
-    // Get chat container
     chatContainer = widgetContainer.querySelector('.chat-container');
-    if (!chatContainer) {
-        console.error("Chat container not found");
-        return false;
-    }
-    
-    // Get toggle button
     toggleButton = widgetContainer.querySelector('.chat-toggle');
-    if (!toggleButton) {
-        console.error("Toggle button not found");
-        return false;
-    }
+    chatInterface = widgetContainer.querySelector('.chat-messages-view');
+    newChatBtn = widgetContainer.querySelector('.chat-welcome-button');
+    messagesContainer = widgetContainer.querySelector('.chat-messages');
+    textarea = widgetContainer.querySelector('.chat-input-field');
+    sendButton = widgetContainer.querySelector('.chat-input-button');
+    attachmentButton = widgetContainer.querySelector('.chat-attachment-button');
+    fileInput = widgetContainer.querySelector('.file-input');
+    fileList = widgetContainer.querySelector('.file-list');
     
-    // Get other elements
-    newChatBtn = chatContainer.querySelector('.new-chat-btn');
-    chatInterface = chatContainer.querySelector('.chat-interface');
-    messagesContainer = chatContainer.querySelector('.chat-messages');
-    textarea = chatContainer.querySelector('textarea');
-    sendButton = chatContainer.querySelector('button.send-button');
-    attachmentButton = chatContainer.querySelector('.attachment-button');
-    fileInput = chatContainer.querySelector('.file-input');
-    fileList = chatContainer.querySelector('.file-list');
-    menuButtons = chatContainer.querySelectorAll('.menu-button');
-    expandButtons = chatContainer.querySelectorAll('.expand-button');
-    downloadButtons = chatContainer.querySelectorAll('.download-transcript');
-    viewConversationsButtons = chatContainer.querySelectorAll('.view-conversations-btn');
-    newConversationButtons = chatContainer.querySelectorAll('.new-conversation-btn');
+    menuButtons = widgetContainer.querySelectorAll('.chat-menu-toggle');
+    expandButtons = widgetContainer.querySelectorAll('.expand-button');
+    downloadButtons = widgetContainer.querySelectorAll('.chat-download-transcript');
+    viewConversationsButtons = widgetContainer.querySelectorAll('.chat-view-conversations');
+    newConversationButtons = widgetContainer.querySelectorAll('.chat-new-conversation');
     
-    console.log("DOM references initialized successfully");
     return true;
 }
 
@@ -1264,25 +1270,148 @@ function initDOMReferences() {
 function setupChatUI() {
     console.log("Setting up chat UI event handlers");
     
-    // Check if required elements exist
-    if (!chatContainer || !toggleButton || !newChatBtn || !chatInterface || 
-        !messagesContainer || !textarea || !sendButton || !attachmentButton || 
-        !fileInput || !fileList) {
-        console.error("Required DOM elements not found");
+    // Initialize DOM references
+    if (!initDOMReferences()) {
+        console.error("Failed to initialize DOM references");
         return;
     }
     
-    // Main action buttons
+    // Toggle chat open/close
+    toggleButton.addEventListener('click', () => {
+        const widgetContainer = document.querySelector('.n8n-chat-widget');
+        
+        if (chatContainer.classList.contains('open')) {
+            chatContainer.classList.remove('open');
+            widgetContainer.classList.remove('chat-open');
+            document.body.classList.remove('chat-open');
+        } else {
+            chatContainer.classList.add('open');
+            widgetContainer.classList.add('chat-open');
+            
+            // On mobile, disable scrolling of the background
+            if (isMobileDevice()) {
+                document.body.classList.add('chat-open');
+            }
+            
+            // If it's first time, show welcome screen, else show messages
+            if (conversations.length === 0) {
+                document.querySelector('.chat-welcome').style.display = 'flex';
+                chatInterface.classList.remove('active');
+                document.querySelector('.chat-conversations-view').classList.remove('active');
+            } else {
+                document.querySelector('.chat-welcome').style.display = 'none';
+                chatInterface.classList.add('active');
+                document.querySelector('.chat-conversations-view').classList.remove('active');
+                // Scroll to bottom of messages
+                scrollToBottom();
+            }
+        }
+    });
+    
+    // Close button
+    document.querySelector('.close-button').addEventListener('click', () => {
+        chatContainer.classList.remove('open');
+        document.querySelector('.n8n-chat-widget').classList.remove('chat-open');
+        document.body.classList.remove('chat-open');
+    });
+    
+    // Expand button (except on mobile)
+    if (!isMobileDevice()) {
+        document.querySelector('.expand-button').addEventListener('click', () => {
+            chatContainer.classList.toggle('expanded');
+            
+            // Toggle expand/collapse icon
+            const button = document.querySelector('.expand-button');
+            if (chatContainer.classList.contains('expanded')) {
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 14h6v6"></path>
+                        <path d="M20 10h-6V4"></path>
+                        <path d="M14 10l7-7"></path>
+                        <path d="M3 21l7-7"></path>
+                    </svg>
+                `;
+                button.title = "Collapse";
+            } else {
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h6v6"></path>
+                        <path d="M9 21H3v-6"></path>
+                        <path d="M21 3l-7 7"></path>
+                        <path d="M3 21l7-7"></path>
+                    </svg>
+                `;
+                button.title = "Expand";
+            }
+        });
+    }
+    
+    // Menu button
+    const menuToggle = document.querySelector('.chat-menu-toggle');
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menuDropdown = document.querySelector('.chat-menu-dropdown');
+        menuDropdown.classList.toggle('show');
+        
+        // Add active class to make toggle button fully visible
+        menuToggle.classList.toggle('active');
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', () => {
+        const menuDropdown = document.querySelector('.chat-menu-dropdown');
+        const menuToggle = document.querySelector('.chat-menu-toggle');
+        
+        if (menuDropdown.classList.contains('show')) {
+            menuDropdown.classList.remove('show');
+            menuToggle.classList.remove('active');
+        }
+    });
+    
+    // Welcome button
     newChatBtn.addEventListener('click', startNewConversation);
     
+    // New conversation button
+    document.querySelector('.chat-new-conversation').addEventListener('click', (e) => {
+        e.stopPropagation();
+        startNewConversation();
+        const menuDropdown = document.querySelector('.chat-menu-dropdown');
+        const menuToggle = document.querySelector('.chat-menu-toggle');
+        menuDropdown.classList.remove('show');
+        menuToggle.classList.remove('active');
+    });
+    
+    // View conversations button
+    document.querySelector('.chat-view-conversations').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showConversationsView();
+        const menuDropdown = document.querySelector('.chat-menu-dropdown');
+        const menuToggle = document.querySelector('.chat-menu-toggle');
+        menuDropdown.classList.remove('show');
+        menuToggle.classList.remove('active');
+    });
+    
+    // Download transcript button
+    document.querySelector('.chat-download-transcript').addEventListener('click', (e) => {
+        e.stopPropagation();
+        downloadTranscript();
+        const menuDropdown = document.querySelector('.chat-menu-dropdown');
+        const menuToggle = document.querySelector('.chat-menu-toggle');
+        menuDropdown.classList.remove('show');
+        menuToggle.classList.remove('active');
+    });
+    
+    // Send button
     sendButton.addEventListener('click', () => {
         const message = textarea.value.trim();
         if (message || attachedFiles.length > 0) {
             sendMessage(message);
             textarea.value = '';
+            autoResizeTextarea(textarea);
         }
     });
     
+    // Enter key to send (except with Shift)
     textarea.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -1290,11 +1419,17 @@ function setupChatUI() {
             if (message || attachedFiles.length > 0) {
                 sendMessage(message);
                 textarea.value = '';
+                autoResizeTextarea(textarea);
             }
         }
     });
     
-    // File attachment handling
+    // Auto-resize textarea
+    textarea.addEventListener('input', () => {
+        autoResizeTextarea(textarea);
+    });
+    
+    // File attachment
     attachmentButton.addEventListener('click', () => {
         fileInput.click();
     });
@@ -1302,13 +1437,11 @@ function setupChatUI() {
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             Array.from(e.target.files).forEach(file => {
-                // Use the validation function
                 if (!isValidFileType(file)) {
                     alert(`File ${file.name} is not allowed. Only PNG, JPG, PDF, and CSV files are permitted.`);
                     return;
                 }
                 
-                // Size validation - limit to 10MB
                 if (file.size > 10 * 1024 * 1024) {
                     alert(`File ${file.name} is too large. Maximum size is 10MB.`);
                     return;
@@ -1316,180 +1449,61 @@ function setupChatUI() {
                 
                 addFileToList(file);
             });
-            // Reset the input so the same file can be selected again
             fileInput.value = '';
         }
     });
     
-    // Handle file removal
+    // Handle file remove
     fileList.addEventListener('click', (e) => {
         if (e.target.classList.contains('file-remove')) {
             const fileId = e.target.dataset.fileId;
             removeFile(fileId);
         }
     });
+}
+
+/**
+ * Automatically resize textarea height based on content
+ * @param {HTMLTextAreaElement} textareaElement The textarea element
+ */
+function autoResizeTextarea(textareaElement) {
+    // Reset height to calculate the scrollHeight
+    textareaElement.style.height = '44px';
     
-    // Toggle chat open/close - IMPORTANT!
-    // FIXED VERSION: Single toggle handler for both mobile and desktop
-    toggleButton.addEventListener('click', () => {
-        console.log("Toggle button clicked");
-        
-        // If the container is already open, just close it
-        if (chatContainer.classList.contains('open')) {
-            chatContainer.classList.remove('open');
-            return;
+    // Get the scroll height
+    const scrollHeight = textareaElement.scrollHeight;
+    
+    // Set the new height, but respect max-height
+    if (scrollHeight > 150) {
+        textareaElement.style.height = '150px';
+        textareaElement.style.overflowY = 'auto';
+    } else {
+        textareaElement.style.height = scrollHeight + 'px';
+        textareaElement.style.overflowY = 'hidden';
+    }
+}
+
+/**
+ * Scroll to bottom of messages container
+ * @param {number} delay Optional delay in ms before scrolling
+ */
+function scrollToBottom(delay = 100) {
+    setTimeout(() => {
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-        
-        // Opening the chat
-        chatContainer.classList.add('open');
-        
-        // If it's a mobile device, also expand it
-        if (isMobileDevice()) {
-            chatContainer.classList.add('expanded');
-            
-            // Update expand button icon if it exists
-            const expandBtn = chatContainer.querySelector('.expand-button');
-            if (expandBtn) {
-                expandBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 14h6v6"></path>
-                        <path d="M20 10h-6V4"></path>
-                        <path d="M14 10l7-7"></path>
-                        <path d="M3 21l7-7"></path>
-                    </svg>
-                `;
-                expandBtn.title = "Collapse";
-            }
-        }
-    });
-    
-    // Menu button handlers
-    if (menuButtons && menuButtons.length) {
-        menuButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu(button);
-            });
-        });
-    }
-    
-    // Download transcript handlers
-    if (downloadButtons && downloadButtons.length) {
-        downloadButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                downloadTranscript();
-                // Close the menu
-                const dropdown = button.closest('.menu-dropdown');
-                if (dropdown) dropdown.classList.remove('show');
-            });
-        });
-    }
-    
-    // Expand button handlers
-    if (expandButtons && expandButtons.length) {
-        expandButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                chatContainer.classList.toggle('expanded');
-                // Toggle button icon between expand and collapse
-                if (chatContainer.classList.contains('expanded')) {
-                    button.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 14h6v6"></path>
-                            <path d="M20 10h-6V4"></path>
-                            <path d="M14 10l7-7"></path>
-                            <path d="M3 21l7-7"></path>
-                        </svg>
-                    `;
-                    button.title = "Collapse";
-                } else {
-                    button.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M15 3h6v6"></path>
-                            <path d="M9 21H3v-6"></path>
-                            <path d="M21 3l-7 7"></path>
-                            <path d="M3 21l7-7"></path>
-                        </svg>
-                    `;
-                    button.title = "Expand";
-                }
-            });
-        });
-    }
-    
-    // Rest of the event handlers remain the same...
-    // [Event handlers for conversation management]
-    
-    if (viewConversationsButtons && viewConversationsButtons.length) {
-        viewConversationsButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showConversationsView();
-                // Close the menu
-                document.querySelectorAll('.menu-dropdown.show').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                });
-            });
-        });
-    }
-    
-    if (newConversationButtons && newConversationButtons.length) {
-        newConversationButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                if (e) e.stopPropagation();
-                
-                // Clear messages container
-                messagesContainer.innerHTML = '';
-                
-                // Start new conversation
-                startNewConversation();
-                
-                // Close the menu
-                document.querySelectorAll('.menu-dropdown.show').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                });
-            });
-        });
-    }
-    
-    // Add close button handlers
-    const closeButtons = chatContainer.querySelectorAll('.close-button');
-    if (closeButtons && closeButtons.length) {
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                chatContainer.classList.remove('open');
-            });
-        });
-    }
-    
-    // Close menu when clicking outside
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.menu-dropdown.show').forEach(dropdown => {
-            dropdown.classList.remove('show');
-        });
-    });
-    
-    // Close dropdown when pressing Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.menu-dropdown.show').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-        }
-    });
-    
-    console.log("Chat UI event handlers set up successfully");
+    }, delay);
 }
 
 /**
  * Load conversations from localStorage
- * @returns {boolean} Whether any conversations were loaded
+ * @returns {boolean} True if conversations were loaded
  */
 function loadConversations() {
     const savedConversations = localStorage.getItem('n8n_chat_conversations');
     if (savedConversations) {
         conversations = JSON.parse(savedConversations);
-        return true;
+        return conversations.length > 0;
     }
     return false;
 }
@@ -1502,17 +1516,8 @@ function saveConversations() {
 }
 
 /**
- * Toggle the menu dropdown
- * @param {HTMLElement} menuButton The menu button element
- */
-function toggleMenu(menuButton) {
-    const dropdown = menuButton.querySelector('.menu-dropdown');
-    dropdown.classList.toggle('show');
-}
-
-/**
- * Generate a UUID for unique identifiers
- * @returns {string} A UUID string
+ * Generate a UUID for conversation ID
+ * @returns {string} UUID
  */
 function generateUUID() {
     return crypto.randomUUID ? crypto.randomUUID() : 
@@ -1525,7 +1530,7 @@ function generateUUID() {
 /**
  * Format file size for display
  * @param {number} bytes File size in bytes
- * @returns {string} Formatted file size
+ * @returns {string} Formatted size string
  */
 function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
@@ -1534,22 +1539,40 @@ function formatFileSize(bytes) {
 }
 
 /**
- * Format date and time
+ * Format date for message timestamp
  * @param {Date} date Date object
  * @returns {string} Formatted time string
  */
-function formatDateTime(date) {
-    const options = {
+function formatTime(date) {
+    return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
-    };
-    return date.toLocaleTimeString('en-US', options);
+    });
 }
 
 /**
- * Get current date with timezone
- * @returns {string} Formatted date string with timezone
+ * Format date for conversation list
+ * @param {Date} date Date object
+ * @returns {string} Formatted date string
+ */
+function formatDate(date) {
+    const now = new Date();
+    const diff = now - date;
+    const day = 24 * 60 * 60 * 1000;
+    
+    if (diff < day) {
+        return 'Today';
+    } else if (diff < 2 * day) {
+        return 'Yesterday';
+    } else {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+}
+
+/**
+ * Get current date with timezone info
+ * @returns {string} Formatted date string
  */
 function getCurrentDateWithTimezone() {
     const now = new Date();
@@ -1566,103 +1589,33 @@ function getCurrentDateWithTimezone() {
 }
 
 /**
- * Format date for conversation list
- * @param {Date} date Date object
- * @returns {string} Formatted date string
+ * Check if file type is valid
+ * @param {File} file File object
+ * @returns {boolean} True if file type is allowed
  */
-function formatDate(date) {
-    const now = new Date();
-    const diff = now - date;
-    const day = 24 * 60 * 60 * 1000;
-    
-    if (diff < day) {
-        return formatDateTime(date);
-    } else if (diff < 2 * day) {
-        return 'Yesterday';
-    } else {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
-}
-
-/**
- * Get file type icon based on file extension
- * @param {string} filename Filename with extension
- * @returns {string} SVG icon markup
- */
-function getFileTypeIcon(filename) {
-    const extension = filename.split('.').pop().toLowerCase();
-    
-    // Define file type categories
-    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
-    const documentTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'odt'];
-    const codeTypes = ['js', 'html', 'css', 'ts', 'jsx', 'tsx', 'py', 'java', 'c', 'cpp', 'cs', 'php', 'rb', 'go', 'swift'];
-    const archiveTypes = ['zip', 'rar', 'tar', 'gz', '7z'];
-    
-    let iconPath;
-    
-    if (imageTypes.includes(extension)) {
-        iconPath = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-        </svg>`;
-    } else if (documentTypes.includes(extension)) {
-        iconPath = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>`;
-    } else if (codeTypes.includes(extension)) {
-        iconPath = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>`;
-    } else if (archiveTypes.includes(extension)) {
-        iconPath = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>`;
-    } else {
-        // Generic file icon
-        iconPath = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-            <polyline points="13 2 13 9 20 9"></polyline>
-        </svg>`;
-    }
-    
-    return iconPath;
-}
 function isValidFileType(file) {
     const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'text/csv'];
     return allowedTypes.includes(file.type);
 }
+
 /**
- * Create a thumbnail for image preview
- * @param {File} file The file object
+ * Create a file thumbnail
+ * @param {File} file File object
  * @param {Function} callback Callback function with thumbnail URL
  */
-
-
 function createThumbnail(file, callback) {
     const extension = file.name.split('.').pop().toLowerCase();
     const imageTypes = ['jpg', 'jpeg', 'png'];
     
-    // Only create thumbnails for image types, with security measures
     if (imageTypes.includes(extension) && 
        (file.type === 'image/jpeg' || file.type === 'image/png')) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Create a thumbnail with limited dimensions for preview only
             const img = new Image();
             img.onload = function() {
-                // Create a canvas to resize the image safely
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Limit thumbnail size to prevent large renders
                 const maxSize = 100;
                 let width = img.width;
                 let height = img.height;
@@ -1682,33 +1635,24 @@ function createThumbnail(file, callback) {
                 canvas.width = width;
                 canvas.height = height;
                 
-                // Draw resized image to canvas
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // Return the data URL of the thumbnail
                 callback(canvas.toDataURL('image/jpeg', 0.7));
             };
             
-            // Set source with security attributes
             img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     } else {
-        // Not an image or not an allowed image type, use icon instead
         callback(null);
     }
 }
 
 /**
- * Add a file to the attachment list
- * @param {File} file The file object
+ * Add file to attachment list
+ * @param {File} file File object
  */
 function addFileToList(file) {
-    if (!isValidFileType(file)) {
-        alert(`File ${file.name} is not allowed. Only PNG, JPG, PDF, and CSV files are permitted.`);
-        return;
-    }
-   
     const fileId = generateUUID();
     
     attachedFiles.push({
@@ -1729,12 +1673,12 @@ function addFileToList(file) {
     `;
     
     fileList.appendChild(fileElement);
-    fileList.style.display = attachedFiles.length ? 'flex' : 'none';
+    fileList.style.display = 'flex';
 }
 
 /**
- * Remove a file from the attachment list
- * @param {string} fileId The file ID to remove
+ * Remove file from attachment list
+ * @param {string} fileId File ID to remove
  */
 function removeFile(fileId) {
     attachedFiles = attachedFiles.filter(file => file.id !== fileId);
@@ -1746,9 +1690,9 @@ function removeFile(fileId) {
 }
 
 /**
- * Create a file preview element
- * @param {File} file The file object
- * @returns {Promise<HTMLElement>} Promise resolving to the preview element
+ * Create file preview element
+ * @param {File} file File object
+ * @returns {Promise<HTMLElement>} Promise resolving to preview element
  */
 function createFilePreviewElement(file) {
     return new Promise((resolve) => {
@@ -1758,29 +1702,23 @@ function createFilePreviewElement(file) {
         const thumbnailContainer = document.createElement('div');
         thumbnailContainer.className = 'file-preview-thumbnail';
         
-        // Use appropriate icon based on file type
         const extension = file.name.split('.').pop().toLowerCase();
         
         if ((extension === 'jpg' || extension === 'jpeg' || extension === 'png') && 
             (file.type === 'image/jpeg' || file.type === 'image/png')) {
-            // For images, create a safe thumbnail
             createThumbnail(file, (thumbnailUrl) => {
                 if (thumbnailUrl) {
-                    // Create image with security attributes
                     const img = document.createElement('img');
                     img.src = thumbnailUrl;
                     img.alt = file.name;
-                    // Prevent drag & drop and right-click save
                     img.setAttribute('draggable', 'false');
                     img.oncontextmenu = () => false;
                     
                     thumbnailContainer.appendChild(img);
                 } else {
-                    // Fallback to icon if thumbnail creation fails
                     thumbnailContainer.innerHTML = getFileTypeIcon(file.name);
                 }
                 
-                // Complete the rest of the preview item
                 previewItem.appendChild(thumbnailContainer);
                 
                 const fileInfo = document.createElement('div');
@@ -1794,29 +1732,7 @@ function createFilePreviewElement(file) {
                 resolve(previewItem);
             });
         } else {
-            // Use appropriate icon for non-image files
-            if (extension === 'pdf') {
-                // PDF icon
-                thumbnailContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <rect x="8" y="12" width="8" height="2"></rect>
-                    <rect x="8" y="16" width="8" height="2"></rect>
-                    <rect x="8" y="8" width="2" height="2"></rect>
-                </svg>`;
-            } else if (extension === 'csv') {
-                // CSV icon
-                thumbnailContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"></path>
-                    <polyline points="14 2 14 7 19 7"></polyline>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                    <line x1="8" y1="16" x2="16" y2="16"></line>
-                    <line x1="8" y1="8" x2="10" y2="8"></line>
-                </svg>`;
-            } else {
-                // Generic file icon for unsupported types (shouldn't happen with our validation)
-                thumbnailContainer.innerHTML = getFileTypeIcon(file.name);
-            }
+            thumbnailContainer.innerHTML = getFileTypeIcon(file.name);
             
             previewItem.appendChild(thumbnailContainer);
             
@@ -1834,35 +1750,71 @@ function createFilePreviewElement(file) {
 }
 
 /**
+ * Get file type icon based on extension
+ * @param {string} filename Filename
+ * @returns {string} SVG icon HTML
+ */
+function getFileTypeIcon(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(extension)) {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+        </svg>`;
+    } else if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'].includes(extension)) {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>`;
+    } else if (extension === 'csv') {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>`;
+    } else {
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+        </svg>`;
+    }
+}
+
+/**
  * Render markdown content
- * @param {string} text The markdown text
+ * @param {string} text Markdown text
  * @returns {string} HTML content
  */
 function renderMarkdown(text) {
+    if (!text) return '';
+    
     if (typeof marked === 'undefined') {
-        console.warn('Marked.js not loaded yet, using plaintext');
+        console.warn('Marked.js not loaded yet, returning plain text');
         return text;
     }
 
-    // Configure marked options
+    // Configure marked
     marked.setOptions({
         renderer: new marked.Renderer(),
         highlight: function(code, lang) {
             if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
                 try {
-                    return hljs.highlight(code, {language: lang}).value;
-                } catch (err) {
-                    console.error('Error highlighting code:', err);
+                    return hljs.highlight(code, { language: lang }).value;
+                } catch (e) {
+                    console.error('Error highlighting code:', e);
                 }
             }
             return code;
         },
-        pedantic: false,
         gfm: true,
         breaks: true,
-        sanitize: false,
-        smartypants: false,
-        xhtml: false
+        sanitize: false
     });
 
     try {
@@ -1874,219 +1826,17 @@ function renderMarkdown(text) {
 }
 
 /**
- * Save chat state to localStorage
+ * Apply syntax highlighting to code blocks
  */
-function saveChatState() {
-    if (currentSessionId && chatMessages.length > 0) {
-        // Find or create conversation in the list
-        let existingConversationIndex = conversations.findIndex(c => c.sessionId === currentSessionId);
-        
-        const preview = chatMessages.length > 0 
-            ? chatMessages[chatMessages.length - 1].message.substring(0, 50) + (chatMessages[chatMessages.length - 1].message.length > 50 ? '...' : '')
-            : 'New conversation';
-            
-        if (existingConversationIndex >= 0) {
-            // Update existing conversation
-            conversations[existingConversationIndex] = {
-                ...conversations[existingConversationIndex],
-                messages: chatMessages,
-                lastUpdated: new Date().toISOString(),
-                preview: preview
-            };
-        } else {
-            // Create new conversation
-            conversations.unshift({
-                sessionId: currentSessionId,
-                title: `Conversation ${conversations.length + 1}`,
-                messages: chatMessages,
-                lastUpdated: new Date().toISOString(),
-                preview: preview
-            });
-        }
-        
-        // Save to localStorage
-        saveConversations();
-    }
-}
-
-/**
- * Generate and download transcript
- */
-function downloadTranscript() {
-    // Create a transcript
-    const startDate = new Date();
-    let transcript = `Conversation with ${config.branding.name}\n`;
-    transcript += `Started on ${getCurrentDateWithTimezone()}\n`;
-    transcript += `---\n`;
-    
-    chatMessages.forEach(msg => {
-        transcript += `${msg.timestamp} | ${msg.sender}: ${msg.message}\n`;
-        if (msg.files && msg.files.length > 0) {
-            transcript += `  Attached files: ${msg.files.join(', ')}\n`;
-        }
-    });
-    
-    transcript += `---\n`;
-    transcript += `Exported from ${config.branding.name} on ${getCurrentDateWithTimezone()}`;
-    
-    // Create and download the file
-    const blob = new Blob([transcript], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${config.branding.name.replace(/\s+/g, '-')}-conversation-${startDate.toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-/**
- * Render the conversation list
- */
-function renderConversationList() {
-    const conversationList = chatContainer.querySelector('.conversation-list');
-    conversationList.innerHTML = '';
-    
-    if (conversations.length === 0) {
-        conversationList.innerHTML = `
-            <div class="empty-state">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <p>No conversations yet</p>
-                <button class="new-chat-btn">Start a new conversation</button>
-            </div>
-        `;
-        
-        const newChatBtn = conversationList.querySelector('.new-chat-btn');
-        if (newChatBtn) {
-            newChatBtn.addEventListener('click', startNewConversation);
-        }
-        
-        return;
-    }
-    
-    conversations.forEach((conversation, index) => {
-        const date = new Date(conversation.lastUpdated);
-        const formattedDate = formatDate(date);
-        
-        const conversationItem = document.createElement('div');
-        conversationItem.className = `conversation-item${index === activeConversationIndex ? ' active' : ''}`;
-        conversationItem.dataset.index = index;
-        
-        conversationItem.innerHTML = `
-            <div class="conversation-content">
-                <div class="conversation-title">${conversation.title}</div>
-                <div class="conversation-preview">${conversation.preview}</div>
-            </div>
-            <div class="conversation-date">${formattedDate}</div>
-        `;
-        
-        conversationItem.addEventListener('click', () => {
-            loadConversation(index);
+function applySyntaxHighlighting() {
+    if (typeof hljs !== 'undefined') {
+        messagesContainer.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
         });
-        
-        conversationList.appendChild(conversationItem);
-    });
-}
-
-/**
- * Show conversations view
- */
-function showConversationsView() {
-    chatInterface.classList.remove('active');
-    chatContainer.querySelector('.new-conversation').style.display = 'none';
-    chatContainer.querySelector('.conversations-view').classList.add('active');
-    
-    renderConversationList();
-}
-
-/**
- * Load and display a specific conversation
- * @param {number} index The index of the conversation to load
- */
-function loadConversation(index) {
-    if (index >= 0 && index < conversations.length) {
-        activeConversationIndex = index;
-        const conversation = conversations[index];
-        
-        // Load the conversation
-        currentSessionId = conversation.sessionId;
-        chatMessages = [...conversation.messages];
-        
-        // Switch to chat interface
-        chatContainer.querySelector('.conversations-view').classList.remove('active');
-        chatContainer.querySelector('.new-conversation').style.display = 'none';
-        chatInterface.classList.add('active');
-        
-        // Clear current messages and render saved ones
-        messagesContainer.innerHTML = '';
-        
-        // Function to render messages with file previews
-        async function renderMessages() {
-            for (const msg of chatMessages) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `chat-message ${msg.sender === 'Visitor' ? 'user' : 'bot'}`;
-                
-                if (msg.sender === 'Visitor') {
-                    // User message
-                    messageDiv.textContent = msg.message;
-                    
-                    // If there are files, add file previews
-                    if (msg.files && msg.files.length > 0) {
-                        const filePreviewDiv = document.createElement('div');
-                        filePreviewDiv.className = 'file-preview';
-                        
-                        // Display file info instead of actual files since we don't have the actual files in history
-                        for (const fileName of msg.files) {
-                            const filePreviewItem = document.createElement('div');
-                            filePreviewItem.className = 'file-preview-item';
-                            
-                            const thumbnailContainer = document.createElement('div');
-                            thumbnailContainer.className = 'file-preview-thumbnail';
-                            thumbnailContainer.innerHTML = getFileTypeIcon(fileName);
-                            
-                            const fileInfo = document.createElement('div');
-                            fileInfo.className = 'file-preview-info';
-                            fileInfo.innerHTML = `<span class="file-preview-name">${fileName}</span>`;
-                            
-                            filePreviewItem.appendChild(thumbnailContainer);
-                            filePreviewItem.appendChild(fileInfo);
-                            filePreviewDiv.appendChild(filePreviewItem);
-                        }
-                        
-                        messageDiv.appendChild(filePreviewDiv);
-                    }
-                } else {
-                    // Bot message with markdown support
-                    const markdownDiv = document.createElement('div');
-                    markdownDiv.className = 'bot-markdown';
-                    markdownDiv.innerHTML = renderMarkdown(msg.message);
-                    messageDiv.appendChild(markdownDiv);
-                }
-                
-                // Add timestamp
-                const timestamp = document.createElement('div');
-                timestamp.className = 'timestamp';
-                timestamp.textContent = msg.timestamp;
-                messageDiv.appendChild(timestamp);
-                
-                messagesContainer.appendChild(messageDiv);
-            }
-            
-            // Scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            // Apply syntax highlighting
-            if (typeof hljs !== 'undefined') {
-                messagesContainer.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-            }
-        }
-        
-        renderMessages();
+    } else {
+        console.warn('Highlight.js not loaded yet, skipping syntax highlighting');
+        // Try again in a second
+        setTimeout(applySyntaxHighlighting, 1000);
     }
 }
 
@@ -2094,81 +1844,143 @@ function loadConversation(index) {
  * Start a new conversation
  */
 async function startNewConversation() {
-    // Create a new session ID and clear message history
+    // Generate new session ID
     currentSessionId = generateUUID();
     chatMessages = [];
     activeConversationIndex = -1;
     
-    // Hide conversation view if open
-    chatContainer.querySelector('.conversations-view').classList.remove('active');
+    // Update UI
+    document.querySelector('.chat-welcome').style.display = 'none';
+    document.querySelector('.chat-conversations-view').classList.remove('active');
+    document.querySelector('.chat-messages-view').classList.add('active');
+    messagesContainer.innerHTML = '';
     
-    const data = [{
-        action: "loadPreviousSession",
-        sessionId: currentSessionId,
-        route: config.webhook.route,
-        metadata: {
-            userId: ""
-        }
-    }];
+    // Clear input and attachments
+    textarea.value = '';
+    attachedFiles = [];
+    fileList.innerHTML = '';
+    fileList.style.display = 'none';
+    autoResizeTextarea(textarea);
 
     try {
+        // Send initial empty message
+        const data = [{
+            action: "loadPreviousSession",
+            sessionId: currentSessionId,
+            route: config.webhook.route,
+            metadata: { userId: "" }
+        }];
+
+        // Show loading indicator
+        const loadingIndicator = createLoadingIndicator();
+        messagesContainer.appendChild(loadingIndicator);
+
         const response = await fetch(config.webhook.url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
 
         const responseData = await response.json();
         
-        // Show header, hide welcome screen, show chat interface
-        chatContainer.querySelector('.new-conversation').style.display = 'none';
-        chatInterface.classList.add('active');
+        // Remove loading indicator
+        messagesContainer.removeChild(loadingIndicator);
 
-        const botMessageDiv = document.createElement('div');
-        botMessageDiv.className = 'chat-message bot';
+        // Extract bot response
+        const botResponse = Array.isArray(responseData) ? 
+            responseData[0].output : responseData.output;
         
-        const markdownDiv = document.createElement('div');
-        markdownDiv.className = 'bot-markdown';
+        // Add bot message
+        addMessage(botResponse, 'bot');
         
-        const botResponse = Array.isArray(responseData) ? responseData[0].output : responseData.output;
-        markdownDiv.innerHTML = renderMarkdown(botResponse);
-        
-        // Add timestamp
-        const timestamp = document.createElement('div');
-        timestamp.className = 'timestamp';
-        timestamp.textContent = formatDateTime(new Date());
-        
-        botMessageDiv.appendChild(markdownDiv);
-        botMessageDiv.appendChild(timestamp);
-        messagesContainer.appendChild(botMessageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Save to transcript
-        chatMessages.push({
-            timestamp: formatDateTime(new Date()),
-            sender: config.branding.name,
-            message: botResponse
-        });
-        
-        // Save updated chat state to localStorage
+        // Save conversation
         saveChatState();
         
-        // Apply syntax highlighting to code blocks if hljs is loaded
-        if (typeof hljs !== 'undefined') {
-            botMessageDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
-        }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error starting conversation:', error);
+        
+        // Show error message
+        addMessage('Sorry, there was a problem connecting to the server. Please try again later.', 'bot');
     }
+    
+    // Focus on input field
+    textarea.focus();
 }
 
 /**
- * Send a message to the server
- * @param {string} message The message text
+ * Create a loading indicator
+ * @returns {HTMLElement} Loading indicator element
+ */
+function createLoadingIndicator() {
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'loading-indicator';
+    
+    // Create the square loader with its layers
+    const loaderEl = document.createElement('div');
+    loaderEl.className = 'loader';
+    
+    loadingEl.appendChild(loaderEl);
+    loadingEl.style.display = 'flex';
+    
+    return loadingEl;
+}
+
+/**
+ * Add a message to the chat
+ * @param {string} message Message text
+ * @param {string} sender 'user' or 'bot'
+ */
+function addMessage(message, sender) {
+    // Create message element
+    const messageEl = document.createElement('div');
+    messageEl.className = `chat-message ${sender}`;
+    
+    // Create message bubble
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = 'chat-message-bubble';
+    
+    if (sender === 'bot') {
+        // For bot messages, render markdown
+        const markdownEl = document.createElement('div');
+        markdownEl.className = 'chat-markdown';
+        markdownEl.innerHTML = renderMarkdown(message);
+        bubbleEl.appendChild(markdownEl);
+    } else {
+        // For user messages, use plain text
+        bubbleEl.textContent = message;
+    }
+    
+    // Create timestamp
+    const timeEl = document.createElement('div');
+    timeEl.className = 'chat-message-time';
+    const now = new Date();
+    timeEl.textContent = formatTime(now);
+    
+    // Assemble message
+    messageEl.appendChild(bubbleEl);
+    messageEl.appendChild(timeEl);
+    
+    // Add to container
+    messagesContainer.appendChild(messageEl);
+    
+    // Scroll to bottom
+    scrollToBottom();
+    
+    // Save message to transcript
+    chatMessages.push({
+        timestamp: formatTime(now),
+        sender: sender === 'user' ? 'Visitor' : config.branding.name,
+        message: message,
+        html: sender === 'bot' ? renderMarkdown(message) : null
+    });
+    
+    // Apply syntax highlighting if available
+    applySyntaxHighlighting();
+}
+
+/**
+ * Send a message to the API
+ * @param {string} message Message text
  */
 async function sendMessage(message) {
     // Create FormData for file uploads
@@ -2185,111 +1997,99 @@ async function sendMessage(message) {
             fileAttachments: attachedFiles.map(fileObj => ({
                 name: fileObj.file.name,
                 size: fileObj.file.size,
-                type: fileObj.file.type,
-                // Don't include file content in metadata - reference only
+                type: fileObj.file.type
             }))
         }
     };
     
-    // First, add the JSON message data to the FormData
+    // Add message data to FormData
     formData.append('data', JSON.stringify(messageData));
     
     // Keep track of file names for chat history
     const fileNames = [];
     
-    // Add files individually to the FormData with the 'files' key for each one
-    // Explicitly set Content-Disposition to attachment to prevent inline rendering
-    attachedFiles.forEach((fileObj, index) => {
-        // Use a custom field name that indicates these are attachments
+    // Add files to FormData
+    attachedFiles.forEach((fileObj) => {
         formData.append('file_attachments', fileObj.file, fileObj.file.name);
         fileNames.push(fileObj.file.name);
     });
 
-    const userMessageDiv = document.createElement('div');
-    userMessageDiv.className = 'chat-message user';
-    userMessageDiv.textContent = message;
+    // Add user message to UI
+    const messageEl = document.createElement('div');
+    messageEl.className = 'chat-message user';
     
-    // Add timestamp
-    const timestamp = document.createElement('div');
-    timestamp.className = 'timestamp';
-    timestamp.textContent = formatDateTime(new Date());
-    userMessageDiv.appendChild(timestamp);
+    // Create message bubble
+    const bubbleEl = document.createElement('div');
+    bubbleEl.className = 'chat-message-bubble';
+    bubbleEl.textContent = message;
     
-    // Save to transcript
-    const messageRecord = {
-        timestamp: formatDateTime(new Date()),
-        sender: "Visitor",
-        message: message
-    };
+    // Create timestamp
+    const timeEl = document.createElement('div');
+    timeEl.className = 'chat-message-time';
+    const now = new Date();
+    timeEl.textContent = formatTime(now);
     
-    // If there are attached files, add file previews and save to message record
+    // Assemble message
+    messageEl.appendChild(bubbleEl);
+    messageEl.appendChild(timeEl);
+    
+    // Add file previews if any
     if (attachedFiles.length > 0) {
-        messageRecord.files = fileNames;
-        
         const filePreviewDiv = document.createElement('div');
         filePreviewDiv.className = 'file-preview';
         
-        // Create file preview elements for each attached file
         const previewPromises = attachedFiles.map(fileObj => createFilePreviewElement(fileObj.file));
         
         Promise.all(previewPromises).then(previewElements => {
-            // Add all preview elements to the file preview div
             previewElements.forEach(previewElement => {
                 filePreviewDiv.appendChild(previewElement);
             });
             
-            // Add the file preview div to the user message
-            userMessageDiv.appendChild(filePreviewDiv);
-            
-            // Make sure messages container scrolls to show the latest message
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            bubbleEl.appendChild(filePreviewDiv);
+            scrollToBottom();
         });
     }
     
-    // Add the user message to the chat
-    messagesContainer.appendChild(userMessageDiv);
+    // Add to container
+    messagesContainer.appendChild(messageEl);
     
-    // Add message to chat history
+    // Save to transcript
+    const messageRecord = {
+        timestamp: formatTime(now),
+        sender: "Visitor",
+        message: message
+    };
+    
+    if (attachedFiles.length > 0) {
+        messageRecord.files = fileNames;
+    }
+    
     chatMessages.push(messageRecord);
     
-    // Save chat state with new message
+    // Save chat state
     saveChatState();
     
-    // Scroll to bottom to show latest message
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // Scroll to bottom
+    scrollToBottom();
     
     // Keep a copy of files to send
     const filesToSend = [...attachedFiles];
     
-    // Clear attached files after sending
+    // Clear attached files
     attachedFiles = [];
     fileList.innerHTML = '';
     fileList.style.display = 'none';
 
-    // Show loading indicator after user message is sent
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.className = 'loading-indicator';
-    
-    // Create ONLY the loader square - no extra content
-    const loader = document.createElement('div');
-    loader.className = 'loader';
-    
-    // Just append the loader - nothing else
-    loadingIndicator.appendChild(loader);
+    // Show loading indicator
+    const loadingIndicator = createLoadingIndicator();
     messagesContainer.appendChild(loadingIndicator);
-    loadingIndicator.style.display = 'flex';
+    scrollToBottom();
     
-    // Scroll to show the loading indicator
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
     try {
         let response;
         
         // Use FormData with multipart/form-data when files are attached
         if (filesToSend.length > 0) {
-            // Log the FormData contents for debugging (optional)
-            console.log(`Sending message with ${filesToSend.length} attached files`);
-            
             response = await fetch(config.webhook.url, {
                 method: 'POST',
                 body: formData
@@ -2307,76 +2107,307 @@ async function sendMessage(message) {
         
         const data = await response.json();
         
-        // Hide loading indicator
-        loadingIndicator.style.display = 'none';
+        // Remove loading indicator
+        messagesContainer.removeChild(loadingIndicator);
         
-        const botMessageDiv = document.createElement('div');
-        botMessageDiv.className = 'chat-message bot';
-        
-        const markdownDiv = document.createElement('div');
-        markdownDiv.className = 'bot-markdown';
-        
+        // Extract bot response
         const botResponse = Array.isArray(data) ? data[0].output : data.output;
-        markdownDiv.innerHTML = renderMarkdown(botResponse);
         
-        // Add timestamp
-        const timestampBot = document.createElement('div');
-        timestampBot.className = 'timestamp';
-        timestampBot.textContent = formatDateTime(new Date());
+        // Add bot message
+        addMessage(botResponse, 'bot');
         
-        botMessageDiv.appendChild(markdownDiv);
-        botMessageDiv.appendChild(timestampBot);
-        messagesContainer.appendChild(botMessageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Save to transcript
-        chatMessages.push({
-            timestamp: formatDateTime(new Date()),
-            sender: config.branding.name,
-            message: botResponse
-        });
-        
-        // Save updated chat state to localStorage
+        // Save updated chat state
         saveChatState();
         
-        // Apply syntax highlighting to code blocks if hljs is loaded
-        if (typeof hljs !== 'undefined') {
-            botMessageDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
-        }
     } catch (error) {
         console.error('Error:', error);
         
-        // Hide loading indicator even if there's an error
-        loadingIndicator.style.display = 'none';
+        // Remove loading indicator
+        messagesContainer.removeChild(loadingIndicator);
         
         // Show error message
-        const errorMessageDiv = document.createElement('div');
-        errorMessageDiv.className = 'chat-message bot';
-        errorMessageDiv.textContent = 'Sorry, there was an error sending your message. Please try again.';
+        addMessage('Sorry, there was an error sending your message. Please try again.', 'bot');
         
-        // Add timestamp
-        const timestampError = document.createElement('div');
-        timestampError.className = 'timestamp';
-        timestampError.textContent = formatDateTime(new Date());
-        
-        errorMessageDiv.appendChild(timestampError);
-        messagesContainer.appendChild(errorMessageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Save to transcript
-        chatMessages.push({
-            timestamp: formatDateTime(new Date()),
-            sender: config.branding.name,
-            message: 'Sorry, there was an error sending your message. Please try again.'
-        });
+        // Save conversation
+        saveChatState();
     }
 }
 
 /**
- * Detect if device is mobile
- * @returns {boolean} True if device is mobile
+ * Save chat state to localStorage
+ */
+/**
+ * Save chat state to localStorage
+ */
+function saveChatState() {
+    if (currentSessionId && chatMessages.length > 0) {
+        // Find existing conversation or create new one
+        let conversationIndex = conversations.findIndex(c => c.sessionId === currentSessionId);
+        
+        // Create preview text
+        const lastMessage = chatMessages[chatMessages.length - 1];
+        let plainText = lastMessage.message;
+        
+        // Strip HTML if there's rendered HTML
+        if (lastMessage.sender !== 'Visitor') {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = plainText;
+            plainText = tempDiv.textContent || tempDiv.innerText || plainText;
+        }
+        
+        const preview = plainText.substring(0, 60) + 
+            (plainText.length > 60 ? '...' : '');
+        
+        if (conversationIndex >= 0) {
+            // Update existing conversation
+            conversations[conversationIndex] = {
+                ...conversations[conversationIndex],
+                messages: chatMessages,
+                preview: preview,
+                lastUpdated: new Date().toISOString()
+            };
+        } else {
+            // Create new conversation
+            conversations.unshift({
+                sessionId: currentSessionId,
+                title: `Conversation ${conversations.length + 1}`,
+                messages: chatMessages,
+                preview: preview,
+                lastUpdated: new Date().toISOString()
+            });
+            
+            // Set the active index to 0 (the new conversation)
+            activeConversationIndex = 0;
+        }
+        
+        // Save to storage
+        saveConversations();
+    }
+}
+
+/**
+ * Load a specific conversation
+ * @param {number} index Conversation index
+ */
+function loadConversation(index) {
+    if (index >= 0 && index < conversations.length) {
+        activeConversationIndex = index;
+        
+        // Get conversation data
+        const conversation = conversations[index];
+        currentSessionId = conversation.sessionId;
+        chatMessages = [...conversation.messages];
+        
+        // Switch to messages view
+        document.querySelector('.chat-welcome').style.display = 'none';
+        document.querySelector('.chat-conversations-view').classList.remove('active');
+        document.querySelector('.chat-messages-view').classList.add('active');
+        
+        // Clear messages container
+        messagesContainer.innerHTML = '';
+        
+        // Add messages
+        chatMessages.forEach(msg => {
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.className = `chat-message ${msg.sender === 'Visitor' ? 'user' : 'bot'}`;
+            
+            // Create message bubble
+            const bubbleEl = document.createElement('div');
+            bubbleEl.className = 'chat-message-bubble';
+            
+            if (msg.sender !== 'Visitor') {
+                // Bot message with markdown
+                const markdownEl = document.createElement('div');
+                markdownEl.className = 'chat-markdown';
+                
+                // If we have pre-rendered HTML, use it, otherwise render markdown
+                if (msg.html) {
+                    markdownEl.innerHTML = msg.html;
+                } else {
+                    markdownEl.innerHTML = renderMarkdown(msg.message);
+                    
+                    // Update the saved HTML in the message object
+                    msg.html = markdownEl.innerHTML;
+                }
+                
+                bubbleEl.appendChild(markdownEl);
+            } else {
+                // User message as plain text
+                bubbleEl.textContent = msg.message;
+                
+                // Add file attachments if they exist in the message
+                if (msg.files && msg.files.length > 0) {
+                    const filePreviewDiv = document.createElement('div');
+                    filePreviewDiv.className = 'file-preview';
+                    
+                    // Create file preview elements for each attached file
+                    msg.files.forEach(fileName => {
+                        const filePreviewItem = document.createElement('div');
+                        filePreviewItem.className = 'file-preview-item';
+                        
+                        const thumbnailContainer = document.createElement('div');
+                        thumbnailContainer.className = 'file-preview-thumbnail';
+                        thumbnailContainer.innerHTML = getFileTypeIcon(fileName);
+                        
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-preview-info';
+                        fileInfo.innerHTML = `
+                            <span class="file-preview-name">${fileName}</span>
+                        `;
+                        
+                        // Add fileDetails if available (size, etc)
+                        if (msg.fileDetails) {
+                            const fileDetail = msg.fileDetails.find(fd => fd.name === fileName);
+                            if (fileDetail && fileDetail.size) {
+                                const sizeSpan = document.createElement('span');
+                                sizeSpan.className = 'file-preview-size';
+                                sizeSpan.textContent = formatFileSize(fileDetail.size);
+                                fileInfo.appendChild(sizeSpan);
+                            }
+                        }
+                        
+                        filePreviewItem.appendChild(thumbnailContainer);
+                        filePreviewItem.appendChild(fileInfo);
+                        filePreviewDiv.appendChild(filePreviewItem);
+                    });
+                    
+                    bubbleEl.appendChild(filePreviewDiv);
+                }
+            }
+            
+            // Create timestamp
+            const timeEl = document.createElement('div');
+            timeEl.className = 'chat-message-time';
+            timeEl.textContent = msg.timestamp;
+            
+            // Assemble message
+            messageEl.appendChild(bubbleEl);
+            messageEl.appendChild(timeEl);
+            
+            // Add to container
+            messagesContainer.appendChild(messageEl);
+        });
+        
+        // Scroll to bottom with a longer delay to ensure all content is rendered
+        scrollToBottom(300);
+        
+        // Apply syntax highlighting
+        applySyntaxHighlighting();
+        
+        // Save conversation to ensure HTML is stored
+        saveChatState();
+    }
+}
+
+/**
+ * Show conversations view
+ */
+function showConversationsView() {
+    document.querySelector('.chat-welcome').style.display = 'none';
+    document.querySelector('.chat-messages-view').classList.remove('active');
+    document.querySelector('.chat-conversations-view').classList.add('active');
+    
+    // Render conversations
+    renderConversationsList();
+}
+
+/**
+ * Render the conversations list
+ */
+function renderConversationsList() {
+    const conversationsList = document.querySelector('.chat-conversations-list');
+    conversationsList.innerHTML = '';
+    
+    if (conversations.length === 0) {
+        // Show empty state
+        const emptyEl = document.createElement('div');
+        emptyEl.className = 'chat-empty-state';
+        emptyEl.innerHTML = `
+            <svg class="chat-empty-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <p class="chat-empty-text">No conversations yet</p>
+            <button class="chat-welcome-button">GROW MY BUSINESS</button>
+        `;
+        
+        conversationsList.appendChild(emptyEl);
+        
+        // Add event listener to button
+        const newChatBtn = emptyEl.querySelector('.chat-welcome-button');
+        newChatBtn.addEventListener('click', startNewConversation);
+        
+        return;
+    }
+    
+    // Add conversation items
+    conversations.forEach((conversation, index) => {
+        const date = new Date(conversation.lastUpdated);
+        
+        const itemEl = document.createElement('div');
+        itemEl.className = `chat-conversation-item${index === activeConversationIndex ? ' active' : ''}`;
+        itemEl.innerHTML = `
+            <div class="chat-conversation-content">
+                <div class="chat-conversation-title">${conversation.title}</div>
+                <div class="chat-conversation-preview">${conversation.preview}</div>
+            </div>
+            <div class="chat-conversation-time">${formatDate(date)}</div>
+        `;
+        
+        // Add click handler
+        itemEl.addEventListener('click', () => {
+            loadConversation(index);
+        });
+        
+        conversationsList.appendChild(itemEl);
+    });
+}
+
+/**
+ * Generate and download transcript
+ */
+function downloadTranscript() {
+    if (!currentSessionId || chatMessages.length === 0) {
+        console.warn('No conversation to download');
+        return;
+    }
+    
+    // Create transcript text
+    let transcript = `Conversation with ${config.branding.name}\n`;
+    transcript += `Date: ${new Date().toLocaleDateString()}\n`;
+    transcript += `${'-'.repeat(40)}\n\n`;
+    
+    chatMessages.forEach(msg => {
+        // Get plain text from messages
+        let msgText = msg.message;
+        if (msg.sender !== 'Visitor' && msg.message.includes('<')) {
+            // Create a temporary div to strip HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = msgText;
+            msgText = tempDiv.textContent || tempDiv.innerText || msgText;
+        }
+        
+        transcript += `[${msg.timestamp}] ${msg.sender}: ${msgText}\n\n`;
+    });
+    
+    transcript += `\n${'-'.repeat(40)}\n`;
+    transcript += `Generated on ${new Date().toLocaleString()}`;
+    
+    // Create and trigger download
+    const blob = new Blob([transcript], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${config.branding.name.replace(/\s+/g, '-')}-conversation-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Check if device is mobile
+ * @returns {boolean} True if on mobile device
  */
 function isMobileDevice() {
     return (window.innerWidth <= 768) || 
@@ -2390,90 +2421,50 @@ function isMobileDevice() {
 }
 
 /**
- * Handle textarea auto-resizing for better mobile experience
+ * Set up textarea auto-resizing
  */
 function setupTextareaAutoResize() {
     if (!textarea) return;
     
-    // Set a low initial height
-    textarea.style.height = 'auto';
+    // Set initial height
+    textarea.style.height = '44px';
     
+    // Input event listener to adjust height
     textarea.addEventListener('input', function() {
-        // Reset height to shrink if needed
-        this.style.height = 'auto';
-        
-        // Calculate new height based on content (with max height limit)
-        const newHeight = Math.min(this.scrollHeight, isMobileDevice() ? 100 : 120);
-        this.style.height = newHeight + 'px';
-        
-        // Scroll chat messages to ensure input is visible if textarea grows
-        if (messagesContainer && newHeight > 50) {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+        autoResizeTextarea(this);
     });
 }
 
 /**
- * Automatically go into full screen mode on mobile
- */
-function handleMobileFullScreen() {
-    if (isMobileDevice()) {
-        // On mobile, when opening the chat, make it expanded by default
-        toggleButton.addEventListener('click', function() {
-            if (!chatContainer.classList.contains('open')) {
-                // Add both open and expanded classes
-                chatContainer.classList.add('open');
-                chatContainer.classList.add('expanded');
-                
-                // Update expand button icon if it exists
-                const expandBtn = chatContainer.querySelector('.expand-button');
-                if (expandBtn) {
-                    expandBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 14h6v6"></path>
-                            <path d="M20 10h-6V4"></path>
-                            <path d="M14 10l7-7"></path>
-                            <path d="M3 21l7-7"></path>
-                        </svg>
-                    `;
-                    expandBtn.title = "Collapse";
-                }
-            } else {
-                chatContainer.classList.remove('open');
-                // Keep expanded state for next opening
-            }
-        });
-    }
-}
-
-/**
- * Add viewport meta tag to ensure proper scaling
+ * Add viewport meta tag for mobile
  */
 function addViewportMeta() {
-    // Check if viewport meta tag exists
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     
-    // If it doesn't exist, create it
     if (!viewportMeta) {
         viewportMeta = document.createElement('meta');
         viewportMeta.name = 'viewport';
         document.head.appendChild(viewportMeta);
     }
     
-    // Set proper content for responsive design
     viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
 }
 
 /**
- * Enhance mobile experience with optimizations
+ * Enhance mobile experience
  */
 function enhanceMobileExperience() {
     addViewportMeta();
     setupTextareaAutoResize();
-    // Remove handleMobileFullScreen() call since we integrated it into the main toggle handler
     
-    // Add touch-friendly event listeners
-    document.addEventListener('touchstart', function() {
-        // This empty handler enables :active states on iOS
-    }, false);
+    // Add touch event listener for iOS
+    document.addEventListener('touchstart', function() {}, false);
+    
+    // Hide expand button on mobile
+    if (isMobileDevice()) {
+        const expandButtons = document.querySelectorAll('.expand-button');
+        expandButtons.forEach(button => {
+            button.style.display = 'none';
+        });
+    }
 }
