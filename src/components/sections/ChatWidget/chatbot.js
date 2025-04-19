@@ -1050,7 +1050,7 @@ function injectStyles() {
 @media (max-width: 768px) {
     .n8n-chat-widget .chat-container {
         width: 100%;
-        height: 100vh;
+        height: 100%;
         bottom: 0;
         top: 0;
         left: 0;
