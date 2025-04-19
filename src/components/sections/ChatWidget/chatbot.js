@@ -1050,36 +1050,43 @@ function injectStyles() {
                 width: 100%;
                 height: 100vh;
                 bottom: 0;
-                ${config.style.position}: 0;
+                top: 0; /* Ensure it starts at the top of the screen */
+                left: 0;
+                right: 0;
+                position: fixed;
                 border-radius: 0;
-                border: none;
                 margin: 0;
+                padding: 0;
+                transform: none !important; /* Prevent any transforms */
                 max-height: 100vh;
+                overflow: hidden;
             }
             
+            /* Make sure the chat container is properly laid out */
             .n8n-chat-widget .chat-container.open {
-                transform: none;
+                animation: none; /* Disable the sliding animation on mobile */
+                display: flex;
+                flex-direction: column;
             }
             
+            /* Ensure header is at the top */
+            .n8n-chat-widget .chat-header {
+                position: sticky; 
+                top: 0;
+                z-index: 30;
+                background: var(--chat-bg);
+                width: 100%;
+                padding: 16px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+            
+            /* Fix body scrolling */
             body.chat-open {
                 overflow: hidden;
                 position: fixed;
                 width: 100%;
                 height: 100%;
-            }
-            
-            .n8n-chat-widget .chat-header-button.expand-button {
-                display: none;
-            }
-            
-            .n8n-chat-widget .chat-messages {
-                max-height: calc(100vh - 150px);
-            }
-            
-            .n8n-chat-widget .chat-welcome-button,
-            .n8n-chat-widget .chat-input-button {
-                padding: 12px 24px;
-                font-size: 14px;
             }
         }
     `;
@@ -1291,6 +1298,14 @@ function setupChatUI() {
             // On mobile, disable scrolling of the background
             if (isMobileDevice()) {
                 document.body.classList.add('chat-open');
+    
+    // Ensure window scrolls to top on mobile when opening chat
+    window.scrollTo(0, 0);
+    
+    // Force a small delay to ensure proper rendering
+    setTimeout(() => {
+        document.querySelector('.chat-header').style.visibility = 'visible';
+    }, 100);
             }
             
             // If it's first time, show welcome screen, else show messages
