@@ -41,15 +41,15 @@ export const showCtaOnScroll = (triggerClass: string) => {
       trigger: `.${triggerClass}`,
       start: 'top 40%',
       end: 'bottom bottom',
-      // Play once and stay in final state
-      toggleActions: 'play none none none',
-      once: true,
+      // Allow the CTA to show/hide when scrolling up/down, just like the background
+      onLeaveBack: () => tl.reverse(),
       fastScrollEnd: true,
     },
   })
   return tl.to(`.show-fixed-cta-on-scroll`, {
     opacity: 1,
-    duration: 0.3
+    duration: 0.8, // Longer duration like the original
+    ease: "power3.inOut", // Smoother, more pronounced easing
   })
 }
 
@@ -81,7 +81,6 @@ export const animateBackgroundOnScroll = (
   })
 }
 
-
 export const percentagesScrollAnimation = (
   triggerClass: string,
   AnimatedElementClass: string,
@@ -102,9 +101,9 @@ export const percentagesScrollAnimation = (
 
   tl.to(`.${AnimatedElementClass}`, {
     strokeDashoffset: offset,
-    duration: isMobile() ? 1.5 : 2.5,
-    ease: 'expo.out',
-    delay: Number(delay) / (isMobile() ? 4 : 3),
+    duration: 2.0, // Significantly slower animation (was 1.5-2.5)
+    ease: 'expo.inOut', // More dramatic easing for slower, more impressive animation
+    delay: Number(delay) / 3,
   })
 }
 
@@ -115,9 +114,9 @@ export const percentagesOnShowAnimation = (
 ) => {
   return gsap.timeline().to(`.${animationClass}`, {
     strokeDashoffset: offset,
-    ease: 'expo.out',
-    duration: isMobile() ? 1 : 1.5, // Faster on mobile
-    delay: Number(delay) / (isMobile() ? 6 : 5), // Reduced delay on mobile
+    ease: 'expo.inOut',
+    duration: 2.0, // Slower animation (was 1-1.5)
+    delay: Number(delay) / 5,
   })
 }
 
