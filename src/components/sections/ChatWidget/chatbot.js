@@ -193,7 +193,7 @@ function injectStyles() {
         /* Persistent glowing effect for toggle button */
         .n8n-chat-widget .chat-toggle {
             box-shadow: 0 0 0 rgba(178, 197, 253, 0.3); 
-            animation: pulse 4s infinite;
+            animation: pulse 5s infinite;
         }
 
         @keyframes pulse {
@@ -201,7 +201,7 @@ function injectStyles() {
                 box-shadow: 0 0 0 0 rgba(133, 79, 255, 0.6); /* Increased opacity */
             }
             70% {
-                box-shadow: 0 0 0 20px rgba(133, 79, 255, 0); /* Increased spread from 10px to 20px */
+                box-shadow: 0 0 0 15px rgba(133, 79, 255, 0); /* Increased spread from 10px to 20px */
             }
             100% {
                 box-shadow: 0 0 0 0 rgba(133, 79, 255, 0);
