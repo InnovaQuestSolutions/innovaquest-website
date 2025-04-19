@@ -1045,50 +1045,65 @@ function injectStyles() {
         }
 
         /* Mobile styles */
-        @media (max-width: 768px) {
-            .n8n-chat-widget .chat-container {
-                width: 100%;
-                height: 100vh;
-                bottom: 0;
-                top: 0; /* Ensure it starts at the top of the screen */
-                left: 0;
-                right: 0;
-                position: fixed;
-                border-radius: 0;
-                margin: 0;
-                padding: 0;
-                transform: none !important; /* Prevent any transforms */
-                max-height: 100vh;
-                overflow: hidden;
-            }
-            
-            /* Make sure the chat container is properly laid out */
-            .n8n-chat-widget .chat-container.open {
-                animation: none; /* Disable the sliding animation on mobile */
-                display: flex;
-                flex-direction: column;
-            }
-            
-            /* Ensure header is at the top */
-            .n8n-chat-widget .chat-header {
-                position: sticky; 
-                top: 0;
-                z-index: 30;
-                background: var(--chat-bg);
-                width: 100%;
-                padding: 16px;
-                margin: 0;
-                box-sizing: border-box;
-            }
-            
-            /* Fix body scrolling */
-            body.chat-open {
-                overflow: hidden;
-                position: fixed;
-                width: 100%;
-                height: 100%;
-            }
-        }
+        /* Mobile styles */
+/* Mobile styles */
+@media (max-width: 768px) {
+    .n8n-chat-widget .chat-container {
+        width: 100%;
+        height: 100vh;
+        bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        position: fixed;
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+        transform: none !important; /* Prevent any transforms */
+        max-height: 100vh;
+        overflow: hidden;
+    }
+    
+    /* Make sure the chat container is properly laid out */
+    .n8n-chat-widget .chat-container.open {
+        animation: none; /* Disable the sliding animation on mobile */
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Ensure input area is always visible at bottom */
+    .n8n-chat-widget .chat-input {
+        position: sticky;
+        bottom: 0;
+        background: var(--chat-bg);
+        z-index: 30; /* Higher z-index to ensure it's above background elements */
+        padding-bottom: env(safe-area-inset-bottom, 15px);
+        margin-top: auto; /* Push to bottom */
+        border-top: 1px solid var(--chat-border);
+    }
+    
+    /* Fix the messages container to ensure proper scrolling */
+    .n8n-chat-widget .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 15px;
+        max-height: calc(100vh - 120px); /* Adjust to account for header and input area */
+    }
+    
+    /* Ensure footer doesn't push content down */
+    .n8n-chat-widget .chat-footer {
+        position: relative;
+        z-index: 25;
+        background: var(--chat-bg);
+        padding: 5px 10px;
+    }
+    
+    /* Fix any background graphics */
+    .n8n-chat-widget + * {
+        z-index: -1 !important; /* Force any siblings behind the chat widget */
+    }
+}
+}
     `;
 
     const styleElement = document.createElement('style');
@@ -1286,21 +1301,23 @@ function setupChatUI() {
     // Toggle chat open/close
     toggleButton.addEventListener('click', () => {
         const widgetContainer = document.querySelector('.n8n-chat-widget');
-        
-        if (chatContainer.classList.contains('open')) {
-            chatContainer.classList.remove('open');
-            widgetContainer.classList.remove('chat-open');
-            document.body.classList.remove('chat-open');
-        } else {
-            chatContainer.classList.add('open');
-            widgetContainer.classList.add('chat-open');
-            
-            // On mobile, disable scrolling of the background
-            if (isMobileDevice()) {
-                document.body.classList.add('chat-open');
     
-    // Ensure window scrolls to top on mobile when opening chat
-    window.scrollTo(0, 0);
+    if (chatContainer.classList.contains('open')) {
+        // Closing the chat
+        chatContainer.classList.remove('open');
+        widgetContainer.classList.remove('chat-open');
+        document.body.classList.remove('chat-open');
+    } else {
+        // Opening the chat
+        chatContainer.classList.add('open');
+        widgetContainer.classList.add('chat-open');
+        
+        // On mobile, disable scrolling of the background
+        if (isMobileDevice()) {
+            document.body.classList.add('chat-open');
+            
+            // Force scroll to top to ensure full visibility
+            window.scrollTo(0, 0);
     
     // Force a small delay to ensure proper rendering
     setTimeout(() => {
@@ -2462,7 +2479,7 @@ function addViewportMeta() {
         document.head.appendChild(viewportMeta);
     }
     
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
 }
 
 /**
@@ -2481,5 +2498,24 @@ function enhanceMobileExperience() {
         expandButtons.forEach(button => {
             button.style.display = 'none';
         });
+        
+        // Handle orientation changes
+        window.addEventListener('resize', handleMobileResize);
+        window.addEventListener('orientationchange', handleMobileResize);
+    }
+}
+
+function handleMobileResize() {
+    if (isMobileDevice() && chatContainer && chatContainer.classList.contains('open')) {
+        // Force window scroll to top
+        window.scrollTo(0, 0);
+        
+        // Ensure input is visible by forcing focus after a short delay
+        setTimeout(() => {
+            if (document.activeElement === textarea) {
+                textarea.blur();
+                setTimeout(() => textarea.focus(), 100);
+            }
+        }, 300);
     }
 }
