@@ -1077,7 +1077,7 @@ function injectStyles() {
         bottom: 0;
         background: var(--chat-bg);
         z-index: 30; /* Higher z-index to ensure it's above background elements */
-        padding-bottom: env(safe-area-inset-bottom, 15px);
+        padding-bottom: 15px;
         margin-top: auto; /* Push to bottom */
         border-top: 1px solid var(--chat-border);
     }
