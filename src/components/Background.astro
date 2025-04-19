@@ -43,13 +43,13 @@
     float diffuse = max(dot(normalize(vNormal), normalize(lightDirection)), 0.0);
 
     // Base color (blue)
-    vec3 baseColor = vec3(0.263, 0.38, 0.933);
+    vec3 baseColor = vec3(0.0, 247.0 / 255.0, 255.0 / 255.0);
 
     // Fake metalness/roughness effect
     vec3 color = mix(baseColor * diffuse, baseColor, roughness);
-    color = mix(color, vec3(0.8), metalness * 0.5);
+    color = mix(color, vec3(0.3), metalness * 0.2);
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 0.25);
   }
 `;
 
@@ -79,7 +79,7 @@
     if (window.innerWidth < 768) {
       // Reduce complexity on mobile
       tubularSegments = 64
-      radialSegments = 12
+      radialSegments = 18
     }
 
     // Modified geometry parameters for more angular look
@@ -111,15 +111,15 @@
     scene.add(torus)
     animateBackgroundOnScroll('pitch', camera)
     
-    const centerPointLight = new THREE.PointLight(0xfffff, 20, 20) // Additional colored light
+    const centerPointLight = new THREE.PointLight(0x9273ff, 20, 20) // Additional colored light
     centerPointLight.position.set(0, 0, 5)
     scene.add(centerPointLight)
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 3) // Increased ambient light
+    const ambientLight = new THREE.AmbientLight(0x9273ff, 3) // Increased ambient light
     scene.add(ambientLight)
 
     // Add subtle hemisphere light for better overall illumination
-    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x9d8cff, 0.9)
+    const hemisphereLight = new THREE.HemisphereLight(0x9273ff, 0x9d8cff, 0.9)
     scene.add(hemisphereLight)
 
     camera.position.z = 30
@@ -161,38 +161,39 @@
   let targetRotationY = 0
 
   let animationId: number
-  function animate() {
-    animationId = requestAnimationFrame(animate)
+  let lastTime = performance.now();
 
-    // Handle drawing animation
-    if (isDrawing && torus.material instanceof THREE.ShaderMaterial) {
-      // Increment progress
-      drawProgress += 0.004; // Adjust this value to control drawing speed
-      
-      // Update the shader uniform
-      torus.material.uniforms.progress.value = drawProgress;
-      
-      // Check if drawing is complete
-      if (drawProgress >= 1.0) {
-        isDrawing = false;
-        drawProgress = 1.0;
-      }
+function animate(currentTime = performance.now()) {
+  animationId = requestAnimationFrame(animate);
+
+  const deltaTime = (currentTime - lastTime) / 1000; // In seconds
+  lastTime = currentTime;
+
+  // Drawing animation using time-based progress
+  if (isDrawing && torus.material instanceof THREE.ShaderMaterial) {
+    drawProgress += deltaTime * 0.25; // Adjust 0.25 to control speed in sec
+
+    torus.material.uniforms.progress.value = drawProgress;
+
+    if (drawProgress >= 1.0) {
+      isDrawing = false;
+      drawProgress = 1.0;
     }
-
-    // Smoother rotation
-    torus.rotation.x += 0.002
-    torus.rotation.y += 0.003
-    torus.rotation.z += 0.001
-
-    // Smooth mouse movement interpolation
-    targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1
-    targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1
-
-    torus.rotation.x = targetRotationY
-    torus.rotation.y = targetRotationX
-
-    renderer.render(scene, camera)
   }
+
+  // Rotation logic (kept frame-based is usually OK for visuals)
+  torus.rotation.x += 0.002;
+  torus.rotation.y += 0.003;
+  torus.rotation.z += 0.001;
+
+  targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1;
+  targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1;
+
+  torus.rotation.x = targetRotationY;
+  torus.rotation.y = targetRotationX;
+
+  renderer.render(scene, camera);
+}
 
   function onWindowResize() {
     if (camera && renderer) {
