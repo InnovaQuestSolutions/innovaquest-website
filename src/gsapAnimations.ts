@@ -58,7 +58,7 @@ export const animateBackgroundOnScroll = (
   camera: PerspectiveCamera,
 ) => {
   // Fixed zoom values
-  const zoomedOutZ = 20.1;  // Initial zoomed out position
+  const zoomedOutZ = 30;  // Initial zoomed out position
   const zoomedInZ = -5; // Final zoomed in position
   
   if (isMobile()) {
@@ -71,7 +71,7 @@ export const animateBackgroundOnScroll = (
     return gsap.timeline({
       scrollTrigger: {
         trigger: `.${triggerClass}`,
-        start: 'top 100%',
+        start: 'top 90%',
         end: '+=700',
         scrub: true, // Direct scrubbing - value is directly tied to scroll position
         pin: false,
@@ -105,7 +105,7 @@ export const animateBackgroundOnScroll = (
         trigger: `.${triggerClass}`,
         start: 'top 70%',
         end: 'bottom bottom',
-        scrub: 0.5, // Smooth scrubbing for desktop
+        scrub: 0.7, // Smooth scrubbing for desktop
         fastScrollEnd: true,
       }
     }).to(camera.position, {
