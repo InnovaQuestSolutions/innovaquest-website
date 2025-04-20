@@ -14,6 +14,10 @@
     torus: THREE.Mesh,
     drawProgress: number = 0,
     isDrawing: boolean = true
+  
+  // Store initial viewport size
+  let initialViewportHeight = window.innerHeight
+  let initialViewportWidth = window.innerWidth
 
   // Custom shader for the drawing effect
   const wireframeVertexShader = `
@@ -54,10 +58,14 @@
 `;
 
   function initThree() {
+    // Save initial viewport dimensions when first initializing
+    initialViewportHeight = window.innerHeight
+    initialViewportWidth = window.innerWidth
+    
     scene = new THREE.Scene()
     camera = new THREE.PerspectiveCamera(
       75,
-      window.innerWidth / window.innerHeight,
+      initialViewportWidth / initialViewportHeight,
       0.1,
       1000,
     )
@@ -69,14 +77,14 @@
       alpha: true,
     })
 
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(initialViewportWidth, initialViewportHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
     // Adjust geometry complexity based on screen size
     let tubularSegments = 100
     let radialSegments = 16
 
-    if (window.innerWidth < 768) {
+    if (initialViewportWidth < 768) {
       // Reduce complexity on mobile
       tubularSegments = 64
       radialSegments = 18
@@ -87,17 +95,17 @@
 
     // Create the custom shader material for the drawing effect
     const material = new THREE.ShaderMaterial({
-  uniforms: {
-    progress: { value: 0.0 },
-    metalness: { value: 0.3 },
-    roughness: { value: 0.2 },
-    lightDirection: { value: new THREE.Vector3(0.5, 1.0, 0.75).normalize() }
-  },
-  vertexShader: wireframeVertexShader,
-  fragmentShader: wireframeFragmentShader,
-  wireframe: true,
-  transparent: true,
-});
+      uniforms: {
+        progress: { value: 0.0 },
+        metalness: { value: 0.3 },
+        roughness: { value: 0.2 },
+        lightDirection: { value: new THREE.Vector3(0.5, 1.0, 0.75).normalize() }
+      },
+      vertexShader: wireframeVertexShader,
+      fragmentShader: wireframeFragmentShader,
+      wireframe: true,
+      transparent: true,
+    });
 
     torus = new THREE.Mesh(geometry, material)
     
@@ -105,7 +113,7 @@
     drawProgress = 0
     isDrawing = true
     
-    // Add responsive scaling based on viewport width
+    // Set initial torus scale
     updateTorusScale()
     
     scene.add(torus)
@@ -136,10 +144,10 @@
     // Option 1: Breakpoint-based scaling
     let scale = 1.0
     
-    if (window.innerWidth < 768) {
+    if (initialViewportWidth < 768) {
       // For mobile devices (smaller than 768px)
       scale = 0.67
-    } else if (window.innerWidth < 1024) {
+    } else if (initialViewportWidth < 1024) {
       // For tablets
       scale = 0.8
     }
@@ -148,7 +156,7 @@
     // Option 2: Proportional scaling
     // Uncomment this and comment out the breakpoint code above if you prefer this approach
     const referenceWidth = 1920
-    let scale = Math.max(0.5, Math.min(1.0, window.innerWidth / referenceWidth))
+    let scale = Math.max(0.5, Math.min(1.0, initialViewportWidth / referenceWidth))
     */
     
     // Apply the scale to the torus
@@ -159,56 +167,76 @@
   let mouseY = 0
   let targetRotationX = 0
   let targetRotationY = 0
+  let initialTorusPosition = new THREE.Vector3()
 
   let animationId: number
   let lastTime = performance.now();
+  
+  // Flag to ignore resize events caused by browser UI changes
+  let ignoreSmallResizes = true
+  const resizeThreshold = 150 // Threshold in pixels to detect actual orientation changes vs UI changes
 
-function animate(currentTime = performance.now()) {
-  animationId = requestAnimationFrame(animate);
+  function animate(currentTime = performance.now()) {
+    animationId = requestAnimationFrame(animate);
 
-  const deltaTime = (currentTime - lastTime) / 1000; // In seconds
-  lastTime = currentTime;
+    const deltaTime = (currentTime - lastTime) / 1000; // In seconds
+    lastTime = currentTime;
 
-  // Drawing animation using time-based progress
-  if (isDrawing && torus.material instanceof THREE.ShaderMaterial) {
-    drawProgress += deltaTime * 0.25; // Adjust 0.25 to control speed in sec
+    // Drawing animation using time-based progress
+    if (isDrawing && torus.material instanceof THREE.ShaderMaterial) {
+      drawProgress += deltaTime * 0.25; // Adjust 0.25 to control speed in sec
 
-    torus.material.uniforms.progress.value = drawProgress;
+      torus.material.uniforms.progress.value = drawProgress;
 
-    if (drawProgress >= 1.0) {
-      isDrawing = false;
-      drawProgress = 1.0;
+      if (drawProgress >= 1.0) {
+        isDrawing = false;
+        drawProgress = 1.0;
+      }
     }
+
+    // Rotation logic (kept frame-based is usually OK for visuals)
+    torus.rotation.x += 0.002;
+    torus.rotation.y += 0.003;
+    torus.rotation.z += 0.001;
+
+    targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1;
+    targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1;
+
+    torus.rotation.x = targetRotationY;
+    torus.rotation.y = targetRotationX;
+
+    renderer.render(scene, camera);
   }
 
-  // Rotation logic (kept frame-based is usually OK for visuals)
-  torus.rotation.x += 0.002;
-  torus.rotation.y += 0.003;
-  torus.rotation.z += 0.001;
-
-  targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1;
-  targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1;
-
-  torus.rotation.x = targetRotationY;
-  torus.rotation.y = targetRotationX;
-
-  renderer.render(scene, camera);
-}
-
   function onWindowResize() {
-    if (camera && renderer) {
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
+    // Only handle significant size changes (orientation change, not browser UI)
+    const heightDiff = Math.abs(window.innerHeight - initialViewportHeight)
+    
+    if (ignoreSmallResizes && heightDiff < resizeThreshold) {
+      // This is likely a browser UI change (like search bar appearing)
+      // Just resize the renderer to fit the new viewport size, but keep the camera/scene as is
       renderer.setSize(window.innerWidth, window.innerHeight)
+      return
+    }
+    
+    // For actual orientation changes/significant resizes, update everything
+    initialViewportHeight = window.innerHeight
+    initialViewportWidth = window.innerWidth
+    
+    if (camera && renderer) {
+      camera.aspect = initialViewportWidth / initialViewportHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(initialViewportWidth, initialViewportHeight)
       
-      // Update the scale whenever the window is resized
+      // Update the scale whenever the window is significantly resized
       updateTorusScale()
     }
   }
 
   function onMouseMove(event: MouseEvent) {
-    mouseX = event.clientX - window.innerWidth / 2
-    mouseY = event.clientY - window.innerHeight / 2
+    // Calculate mouse position relative to the initial viewport center
+    mouseX = event.clientX - initialViewportWidth / 2
+    mouseY = event.clientY - initialViewportHeight / 2
   }
 
   // Initialize
@@ -218,6 +246,11 @@ function animate(currentTime = performance.now()) {
 
     window.addEventListener('resize', onWindowResize)
     window.addEventListener('mousemove', onMouseMove)
+
+    // Store initial torus position after initialization
+    if (torus) {
+      initialTorusPosition.copy(torus.position)
+    }
 
     // Cleanup
     return () => {
@@ -237,6 +270,11 @@ function animate(currentTime = performance.now()) {
 
     window.addEventListener('resize', onWindowResize)
     window.addEventListener('mousemove', onMouseMove)
+
+    // Store initial torus position after initialization
+    if (torus) {
+      initialTorusPosition.copy(torus.position)
+    }
 
     // Cleanup
     return () => {
