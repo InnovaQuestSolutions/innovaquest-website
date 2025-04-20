@@ -64,25 +64,59 @@ export const animateBackgroundOnScroll = (
   if (isMobile()) {
     // For mobile: carefully controlled scrub with safeguards
     let lastZ = initialZ; // Track last position to limit change rate
+    let lastProgress = 0; // Track the last progress value
     
     return gsap.timeline({
       scrollTrigger: {
         trigger: `.${triggerClass}`,
         start: 'top 90%',
-        end: '+=400', // only 150px of scroll needed
-        scrub: 1.5,
-        invalidateOnRefresh: true,
+        end: '+=400', // Keep the original 400px scroll distance
+        scrub: 1.5, // Match original value
+        invalidateOnRefresh: false, // Match original setting
         fastScrollEnd: true,
         onUpdate: function(self) {
+          // Detect large jumps in progress (which could indicate a replay)
+          const progressJump = Math.abs(self.progress - lastProgress);
+          
+          // If there's a large jump in progress or if we're starting over, reset lastZ
+          if (progressJump > 0.1 || self.progress < lastProgress - 0.05) {
+            // Calculate what Z should be at this exact progress point
+            const resetProgress = Math.pow(self.progress, 1.5);
+            const resetPosition = initialZ + (targetZ - initialZ) * resetProgress;
+            lastZ = resetPosition;
+          }
+          
+          // Store current progress for next comparison
+          lastProgress = self.progress;
+          
+          // Only update when progress is meaningful (above threshold)
           if (self.progress > 0.05) {
+            // Calculate target with same easing as original
             const easedProgress = Math.pow(self.progress, 1.5);
             const targetPosition = initialZ + (targetZ - initialZ) * easedProgress;
-            const changeLimit = 0.15;
-            const newZ = lastZ + (targetPosition - lastZ) * changeLimit;
-            camera.position.z = newZ;
+            
+            // Apply smaller changeLimit when progress is changing rapidly
+            const dynamicChangeLimit = progressJump > 0.03 ? 0.05 : 0.15;
+            const newZ = lastZ + (targetPosition - lastZ) * dynamicChangeLimit;
+            
+            // Apply bounds to prevent extreme jumps
+            const maxStep = 0.8; // Maximum allowed change in one update
+            const boundedZ = Math.max(
+              lastZ - maxStep,
+              Math.min(lastZ + maxStep, newZ)
+            );
+            
+            // Update camera position
+            camera.position.z = boundedZ;
             camera.updateMatrixWorld(true);
-            lastZ = newZ;
+            lastZ = boundedZ;
           }
+        },
+        // Add special handling for replay scenarios
+        onEnter: () => {
+          // Reset tracking variables when animation starts/restarts
+          lastZ = camera.position.z;
+          lastProgress = 0;
         }
       }
     }).to(camera.position, {
