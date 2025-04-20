@@ -58,8 +58,8 @@ export const animateBackgroundOnScroll = (
   camera: PerspectiveCamera,
 ) => {
   // Fixed zoom values
-  const zoomedOutZ = 30;  // Initial zoomed out position
-  const zoomedInZ = -20; // Final zoomed in position
+  const zoomedOutZ = 20.1;  // Initial zoomed out position
+  const zoomedInZ = -5; // Final zoomed in position
   
   if (isMobile()) {
     // Simple direct approach for mobile
@@ -109,7 +109,7 @@ export const animateBackgroundOnScroll = (
         fastScrollEnd: true,
       }
     }).to(camera.position, {
-      z: -20,
+      z: -5,
       ease: "none",
       onUpdate: () => {
         camera.updateMatrixWorld(true);
