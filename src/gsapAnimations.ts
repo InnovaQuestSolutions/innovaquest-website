@@ -72,7 +72,7 @@ export const animateBackgroundOnScroll = (
       scrollTrigger: {
         trigger: `.${triggerClass}`,
         start: 'top 90%',
-        end: '+=700',
+        end: '+=600',
         scrub: true, // Direct scrubbing - value is directly tied to scroll position
         pin: false,
         anticipatePin: false,
