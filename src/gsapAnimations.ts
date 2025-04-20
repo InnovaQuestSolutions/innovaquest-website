@@ -71,9 +71,9 @@ export const animateBackgroundOnScroll = (
     return gsap.timeline({
       scrollTrigger: {
         trigger: `.${triggerClass}`,
-        start: 'top 90%',
+        start: 'top 95%',
         end: '+=600',
-        scrub: true, // Direct scrubbing - value is directly tied to scroll position
+        scrub: 0.5, // Changed from true to 0.5 for smoother mobile scrolling
         pin: false,
         anticipatePin: false,
         invalidateOnRefresh: true,
