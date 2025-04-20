@@ -61,53 +61,52 @@ export const animateBackgroundOnScroll = (
   const initialZ = camera.position.z;
   const targetZ = -5; // Final camera position
   
-  // Create scroll-synchronized background animation with improved mobile handling
-  return gsap.timeline({
-    scrollTrigger: {
-      trigger: `.${triggerClass}`,
-      // Adjust start position slightly further down for mobile to prevent early triggering
-      start: isMobile() ? 'top 80%' : 'top 70%',
-      // Extend the end point to make the animation more gradual on mobile
-      end: isMobile() ? 'bottom 80%' : 'bottom bottom',
-      scrub: isMobile() ? 0.8 : 0.5, // Increase smoothing for mobile
-      fastScrollEnd: true,
-      onEnter: () => {
-        // Set initial camera position explicitly when entering to prevent jumps
-        if (isMobile()) {
-          gsap.set(camera.position, { z: initialZ });
-          camera.updateMatrixWorld(true);
-        }
-      },
-      onUpdate: function(self) {
-        // Normalize progress value with slight easing at the beginning for mobile
-        if (isMobile()) {
-          // Apply a slight ease-in curve to the first 20% of the animation
-          let progress = self.progress;
-          if (progress < 0.2) {
-            // Square the progress for first 20% to create a gentler start
-            progress = progress * progress * 5; // Quadratic ease-in, scaled back up
+  if (isMobile()) {
+    // For mobile: carefully controlled scrub with safeguards
+    let lastZ = initialZ; // Track last position to limit change rate
+    
+    return gsap.timeline({
+      scrollTrigger: {
+        trigger: `.${triggerClass}`,
+        start: 'top 90%',
+        end: '+=400', // only 150px of scroll needed
+        scrub: 1.5,
+        invalidateOnRefresh: true,
+        fastScrollEnd: true,
+        onUpdate: function(self) {
+          if (self.progress > 0.05) {
+            const easedProgress = Math.pow(self.progress, 1.5);
+            const targetPosition = initialZ + (targetZ - initialZ) * easedProgress;
+            const changeLimit = 0.15;
+            const newZ = lastZ + (targetPosition - lastZ) * changeLimit;
+            camera.position.z = newZ;
+            camera.updateMatrixWorld(true);
+            lastZ = newZ;
           }
-          
-          // Apply the calculated position directly instead of letting GSAP do it
-          const newZ = initialZ + (targetZ - initialZ) * progress;
-          camera.position.z = newZ;
-          camera.updateMatrixWorld(true);
-          
-          // Return true to tell ScrollTrigger we handled the update
-          return true;
         }
-        
-        // For desktop, just make sure the matrix updates
+      }
+    }).to(camera.position, {
+      z: targetZ, // This is just a placeholder, actual position controlled by onUpdate
+      ease: "none",
+    });
+  } else {
+    // For desktop: smooth scroll-based animation (unchanged)
+    return gsap.timeline({
+      scrollTrigger: {
+        trigger: `.${triggerClass}`,
+        start: 'top 70%',
+        end: 'bottom bottom',
+        scrub: 0.5, // Smooth scrubbing for desktop
+        fastScrollEnd: true,
+      }
+    }).to(camera.position, {
+      z: -20,
+      ease: "none",
+      onUpdate: () => {
         camera.updateMatrixWorld(true);
       }
-    }
-  }).to(camera.position, {
-    z: targetZ,
-    ease: isMobile() ? "power2.out" : "none", // Add slight easing for mobile
-    onUpdate: () => {
-      camera.updateMatrixWorld(true);
-    }
-  });
+    });
+  }
 }
 
 export const percentagesScrollAnimation = (
