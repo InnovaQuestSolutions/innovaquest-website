@@ -14,10 +14,6 @@
     torus: THREE.Mesh,
     drawProgress: number = 0,
     isDrawing: boolean = true
-  
-  // Store initial viewport size
-  let initialViewportHeight = window.innerHeight
-  let initialViewportWidth = window.innerWidth
 
   // Custom shader for the drawing effect
   const wireframeVertexShader = `
@@ -58,14 +54,10 @@
 `;
 
   function initThree() {
-    // Save initial viewport dimensions when first initializing
-    initialViewportHeight = window.innerHeight
-    initialViewportWidth = window.innerWidth
-    
     scene = new THREE.Scene()
     camera = new THREE.PerspectiveCamera(
       75,
-      initialViewportWidth / initialViewportHeight,
+      window.innerWidth / window.innerHeight,
       0.1,
       1000,
     )
@@ -77,14 +69,14 @@
       alpha: true,
     })
 
-    renderer.setSize(initialViewportWidth, initialViewportHeight)
+    renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
     // Adjust geometry complexity based on screen size
     let tubularSegments = 100
     let radialSegments = 16
 
-    if (initialViewportWidth < 768) {
+    if (window.innerWidth < 768) {
       // Reduce complexity on mobile
       tubularSegments = 64
       radialSegments = 18
@@ -144,10 +136,10 @@
     // Option 1: Breakpoint-based scaling
     let scale = 1.0
     
-    if (initialViewportWidth < 768) {
+    if (window.innerWidth < 768) {
       // For mobile devices (smaller than 768px)
       scale = 0.67
-    } else if (initialViewportWidth < 1024) {
+    } else if (window.innerWidth < 1024) {
       // For tablets
       scale = 0.8
     }
@@ -156,7 +148,7 @@
     // Option 2: Proportional scaling
     // Uncomment this and comment out the breakpoint code above if you prefer this approach
     const referenceWidth = 1920
-    let scale = Math.max(0.5, Math.min(1.0, initialViewportWidth / referenceWidth))
+    let scale = Math.max(0.5, Math.min(1.0, window.innerWidth / referenceWidth))
     */
     
     // Apply the scale to the torus
@@ -167,14 +159,9 @@
   let mouseY = 0
   let targetRotationX = 0
   let targetRotationY = 0
-  let initialTorusPosition = new THREE.Vector3()
 
   let animationId: number
   let lastTime = performance.now();
-  
-  // Flag to ignore resize events caused by browser UI changes
-  let ignoreSmallResizes = true
-  const resizeThreshold = 150 // Threshold in pixels to detect actual orientation changes vs UI changes
 
   function animate(currentTime = performance.now()) {
     animationId = requestAnimationFrame(animate);
@@ -208,78 +195,54 @@
     renderer.render(scene, camera);
   }
 
+  // CRITICAL CHANGE: Only update camera aspect ratio, never the scene objects
   function onWindowResize() {
-    // Only handle significant size changes (orientation change, not browser UI)
-    const heightDiff = Math.abs(window.innerHeight - initialViewportHeight)
-    
-    if (ignoreSmallResizes && heightDiff < resizeThreshold) {
-      // This is likely a browser UI change (like search bar appearing)
-      // Just resize the renderer to fit the new viewport size, but keep the camera/scene as is
-      renderer.setSize(window.innerWidth, window.innerHeight)
-      return
-    }
-    
-    // For actual orientation changes/significant resizes, update everything
-    initialViewportHeight = window.innerHeight
-    initialViewportWidth = window.innerWidth
-    
     if (camera && renderer) {
-      camera.aspect = initialViewportWidth / initialViewportHeight
-      camera.updateProjectionMatrix()
-      renderer.setSize(initialViewportWidth, initialViewportHeight)
+      // Always update camera aspect ratio to prevent distortion
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
       
-      // Update the scale whenever the window is significantly resized
-      updateTorusScale()
+      // Always update renderer size
+      renderer.setSize(window.innerWidth, window.innerHeight);
     }
   }
 
   function onMouseMove(event: MouseEvent) {
-    // Calculate mouse position relative to the initial viewport center
-    mouseX = event.clientX - initialViewportWidth / 2
-    mouseY = event.clientY - initialViewportHeight / 2
+    mouseX = event.clientX - window.innerWidth / 2;
+    mouseY = event.clientY - window.innerHeight / 2;
   }
 
   // Initialize
   document.addEventListener('DOMContentLoaded', () => {
-    initThree()
-    animate()
+    initThree();
+    animate();
 
-    window.addEventListener('resize', onWindowResize)
-    window.addEventListener('mousemove', onMouseMove)
-
-    // Store initial torus position after initialization
-    if (torus) {
-      initialTorusPosition.copy(torus.position)
-    }
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mousemove', onMouseMove);
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', onWindowResize)
-      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('resize', onWindowResize);
+      window.removeEventListener('mousemove', onMouseMove);
     }
   })
 
   document.addEventListener('astro:after-swap', () => {
     // Reset drawing animation state
-    drawProgress = 0
-    isDrawing = true
+    drawProgress = 0;
+    isDrawing = true;
     
-    initThree()
-    cancelAnimationFrame(animationId)
-    animate()
+    initThree();
+    cancelAnimationFrame(animationId);
+    animate();
 
-    window.addEventListener('resize', onWindowResize)
-    window.addEventListener('mousemove', onMouseMove)
-
-    // Store initial torus position after initialization
-    if (torus) {
-      initialTorusPosition.copy(torus.position)
-    }
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mousemove', onMouseMove);
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', onWindowResize)
-      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('resize', onWindowResize);
+      window.removeEventListener('mousemove', onMouseMove);
     }
   })
 </script>
