@@ -105,7 +105,7 @@ export const animateBackgroundOnScroll = (
         trigger: `.${triggerClass}`,
         start: 'top 70%',
         end: 'bottom bottom',
-        scrub: 0.7, // Smooth scrubbing for desktop
+        scrub: 0.5, // Smooth scrubbing for desktop
         fastScrollEnd: true,
       }
     }).to(camera.position, {
