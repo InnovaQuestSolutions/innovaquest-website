@@ -26,11 +26,13 @@ const cases = await contentfulClient.getEntries<CaseStudyType, string>({
 ---
 
 <script>
-  import { sectionScrollAnimation } from '../../gsapAnimations'
+  import { sectionScrollAnimation, showCtaOnScroll } from '../../gsapAnimations'
   sectionScrollAnimation('cases', 'cases-animation')
+  showCtaOnScroll('cases')
 </script>
 
-<Layout title="Case Studies">
+<Layout title="Case Studies" customBackground={true} 
+backgroundColor="#0a0b0c">
   <main
     id="cases"
     class="flex flex-col items-center h-fit min-h-screen py-36 px-4 cases"
