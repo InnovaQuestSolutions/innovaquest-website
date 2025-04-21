@@ -8,12 +8,15 @@
   import * as THREE from 'three'
   import { animateBackgroundOnScroll } from '../gsapAnimations'
 
+  // Declare variables at module scope
   let scene: THREE.Scene,
     camera: THREE.PerspectiveCamera,
     renderer: THREE.WebGLRenderer,
     torus: THREE.Mesh,
     drawProgress: number = 0,
-    isDrawing: boolean = true
+    isDrawing: boolean = true,
+    animationId: number | null = null,
+    initialized: boolean = false
 
   // Custom shader for the drawing effect
   const wireframeVertexShader = `
@@ -53,37 +56,77 @@
   }
 `;
 
+  // Clean up ThreeJS resources
+  function cleanup() {
+    if (animationId !== null) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    
+    if (torus && scene) {
+      scene.remove(torus);
+      if (torus.geometry) torus.geometry.dispose();
+      if (torus.material) {
+        if (Array.isArray(torus.material)) {
+          torus.material.forEach(m => m.dispose());
+        } else {
+          torus.material.dispose();
+        }
+      }
+    }
+    
+    if (renderer) {
+      renderer.dispose();
+    }
+    
+    // Remove event listeners
+    window.removeEventListener('resize', onWindowResize);
+    window.removeEventListener('mousemove', onMouseMove);
+    
+    initialized = false;
+  }
+
   function initThree() {
-    scene = new THREE.Scene()
+    const canvas = document.querySelector('#bgCanvas') as HTMLCanvasElement;
+    if (!canvas) {
+      console.error('Canvas element not found, retrying in 100ms');
+      // Retry after a short delay
+      setTimeout(initThree, 100);
+      return;
+    }
+    
+    // Clean up first to prevent duplicates
+    cleanup();
+    
+    scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
       1000,
-    )
+    );
 
-    const canvas = document.querySelector('#bgCanvas') as HTMLCanvasElement
     renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
       alpha: true,
-    })
+    });
 
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     // Adjust geometry complexity based on screen size
-    let tubularSegments = 100
-    let radialSegments = 16
+    let tubularSegments = 100;
+    let radialSegments = 16;
 
     if (window.innerWidth < 768) {
       // Reduce complexity on mobile
-      tubularSegments = 64
-      radialSegments = 18
+      tubularSegments = 64;
+      radialSegments = 18;
     }
 
     // Modified geometry parameters for more angular look
-    const geometry = new THREE.TorusKnotGeometry(8, 3.5, tubularSegments, radialSegments, 2, 3)
+    const geometry = new THREE.TorusKnotGeometry(8, 3.5, tubularSegments, radialSegments, 2, 3);
 
     // Create the custom shader material for the drawing effect
     const material = new THREE.ShaderMaterial({
@@ -99,49 +142,71 @@
       transparent: true,
     });
 
-    torus = new THREE.Mesh(geometry, material)
+    torus = new THREE.Mesh(geometry, material);
     
     // Reset drawing progress
-    drawProgress = 0
-    isDrawing = true
+    drawProgress = 0;
+    isDrawing = true;
     
     // Set initial torus scale
-    updateTorusScale()
+    updateTorusScale();
     
-    scene.add(torus)
-    animateBackgroundOnScroll('pitch', camera)
+    scene.add(torus);
     
-    const centerPointLight = new THREE.PointLight(0x9273ff, 20, 20) // Additional colored light
-    centerPointLight.position.set(0, 0, 5)
-    scene.add(centerPointLight)
+    try {
+      const triggerElement = document.querySelector('.pitch');
+      if (triggerElement) {
+        animateBackgroundOnScroll('pitch', camera);
+      } else {
+        console.warn('No pitch element found for scroll animation');
+      }
+    } catch (error) {
+      console.error('Error setting up scroll animation:', error);
+    }
+    
+    const centerPointLight = new THREE.PointLight(0x9273ff, 20, 20); // Additional colored light
+    centerPointLight.position.set(0, 0, 5);
+    scene.add(centerPointLight);
 
-    const ambientLight = new THREE.AmbientLight(0x9273ff, 3) // Increased ambient light
-    scene.add(ambientLight)
+    const ambientLight = new THREE.AmbientLight(0x9273ff, 3); // Increased ambient light
+    scene.add(ambientLight);
 
     // Add subtle hemisphere light for better overall illumination
-    const hemisphereLight = new THREE.HemisphereLight(0x9273ff, 0x9d8cff, 0.9)
-    scene.add(hemisphereLight)
+    const hemisphereLight = new THREE.HemisphereLight(0x9273ff, 0x9d8cff, 0.9);
+    scene.add(hemisphereLight);
 
-    camera.position.z = 30
+    camera.position.z = 30;
 
     // Add slight rotation to initial position
-    torus.rotation.x = 0.5
-    torus.rotation.y = 0.5
+    torus.rotation.x = 0.5;
+    torus.rotation.y = 0.5;
+    
+    // Add event listeners
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mousemove', onMouseMove);
+    
+    initialized = true;
+    
+    // Start animation
+    if (animationId === null) {
+      lastTime = performance.now();
+      animate();
+    }
   }
 
   // Function to handle responsive scaling
   function updateTorusScale() {
-    if (!torus) return
+    if (!torus) return;
     
     // Option 1: Breakpoint-based scaling
-    let scale = 1.0
+    let scale = 1.0;
     
     if (window.innerWidth < 768) {
       // For mobile devices (smaller than 768px)
-      scale = 0.67
+      scale = 0.67;
     } else if (window.innerWidth < 1024) {
       // For tablets
-      scale = 0.8
+      scale = 0.8;
     }
     
     /* 
@@ -152,25 +217,26 @@
     */
     
     // Apply the scale to the torus
-    torus.scale.set(scale, scale, scale)
+    torus.scale.set(scale, scale, scale);
   }
 
-  let mouseX = 0
-  let mouseY = 0
-  let targetRotationX = 0
-  let targetRotationY = 0
+  let mouseX = 0;
+  let mouseY = 0;
+  let targetRotationX = 0;
+  let targetRotationY = 0;
 
-  let animationId: number
   let lastTime = performance.now();
 
   function animate(currentTime = performance.now()) {
+    if (!initialized) return;
+    
     animationId = requestAnimationFrame(animate);
 
     const deltaTime = (currentTime - lastTime) / 1000; // In seconds
     lastTime = currentTime;
 
     // Drawing animation using time-based progress
-    if (isDrawing && torus.material instanceof THREE.ShaderMaterial) {
+    if (isDrawing && torus && torus.material instanceof THREE.ShaderMaterial) {
       drawProgress += deltaTime * 0.25; // Adjust 0.25 to control speed in sec
 
       torus.material.uniforms.progress.value = drawProgress;
@@ -182,17 +248,21 @@
     }
 
     // Rotation logic (kept frame-based is usually OK for visuals)
-    torus.rotation.x += 0.002;
-    torus.rotation.y += 0.003;
-    torus.rotation.z += 0.001;
+    if (torus) {
+      torus.rotation.x += 0.002;
+      torus.rotation.y += 0.003;
+      torus.rotation.z += 0.001;
 
-    targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1;
-    targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1;
+      targetRotationX += (mouseX * 0.001 - targetRotationX) * 0.1;
+      targetRotationY += (mouseY * 0.001 - targetRotationY) * 0.1;
 
-    torus.rotation.x = targetRotationY;
-    torus.rotation.y = targetRotationX;
+      torus.rotation.x = targetRotationY;
+      torus.rotation.y = targetRotationX;
+    }
 
-    renderer.render(scene, camera);
+    if (renderer && scene && camera) {
+      renderer.render(scene, camera);
+    }
   }
 
   // CRITICAL CHANGE: Only update camera aspect ratio, never the scene objects
@@ -212,37 +282,33 @@
     mouseY = event.clientY - window.innerHeight / 2;
   }
 
-  // Initialize
-  document.addEventListener('DOMContentLoaded', () => {
-    initThree();
-    animate();
-
-    window.addEventListener('resize', onWindowResize);
-    window.addEventListener('mousemove', onMouseMove);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', onWindowResize);
-      window.removeEventListener('mousemove', onMouseMove);
+  // Initialize on first load
+  function initializeBackground() {
+    if (!document.querySelector('#bgCanvas')) {
+      console.warn('Canvas not found during initialization, trying again in 50ms');
+      setTimeout(initializeBackground, 50);
+      return;
     }
-  })
-
-  document.addEventListener('astro:after-swap', () => {
-    // Reset drawing animation state
-    drawProgress = 0;
-    isDrawing = true;
-    
     initThree();
-    cancelAnimationFrame(animationId);
-    animate();
+  }
 
-    window.addEventListener('resize', onWindowResize);
-    window.addEventListener('mousemove', onMouseMove);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', onWindowResize);
-      window.removeEventListener('mousemove', onMouseMove);
+  // Handle both initial load and View Transitions
+  document.addEventListener('DOMContentLoaded', initializeBackground);
+  
+  // Handle Astro view transitions
+  document.addEventListener('astro:page-load', () => {
+    // Only initialize if we're on the homepage or another page that needs the background
+    if (document.querySelector('#bgCanvas')) {
+      initializeBackground();
     }
-  })
+  });
+
+  // Make sure to clean up when leaving the page with the background
+  document.addEventListener('astro:before-swap', cleanup);
+  
+  // Additional fallback for pages that directly include this component
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // Document already loaded, initialize immediately
+    initializeBackground();
+  }
 </script>
