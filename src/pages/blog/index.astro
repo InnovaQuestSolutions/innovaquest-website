@@ -33,7 +33,7 @@ const blogs = await contentfulClient.getEntries<BlogArticleType>({
 <Layout title="Blog">
   <main
     id="blog"
-    class="flex flex-col items-center justify-between gap-10 min-h-fit py-36 px-8 blog"
+    class="flex flex-col items-center h-fit min-h-screen py-36 px-4 blog"
   >
     <DoubleSectionHeading
       accentHeading="BLOG"
@@ -45,7 +45,7 @@ const blogs = await contentfulClient.getEntries<BlogArticleType>({
     </SectionSubtitle>
     {/*<Searchbar animationClass="blog-animation" />*/}
 
-    <div class="flex flex-wrap justify-center gap-20 mt-8 w-11/12">
+    <div class="flex flex-wrap justify-center gap-20 mt-10 w-11/12">
       {
         blogs.items.map(({ sys: { id }, fields }) => (
           <PreviewCard id={id} item={fields} animationClass="blog-animation" />
