@@ -30,7 +30,8 @@ const blogs = await contentfulClient.getEntries<BlogArticleType>({
   sectionScrollAnimation('blog', 'blog-animation')
   showCtaOnScroll('blog')
 </script>
-<Layout title="Blog">
+<Layout title="Blog" customBackground={true} 
+backgroundColor="#0a0b0c">
   <main
     id="blog"
     class="flex flex-col items-center h-fit min-h-screen py-36 px-4 blog"
