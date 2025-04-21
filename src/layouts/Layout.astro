@@ -9,12 +9,16 @@ interface Props {
   title: string;
   description?: string; // Add optional description prop
   image?: string; // Add optional social image prop
+  customBackground?: boolean; // Add this prop
+  backgroundColor?: string; // Add this prop
 }
 // Set defaults and get props
 const { 
   title, 
   description = "InnovaQuest provides game-changing automation solutions to streamline your business workflows and increase productivity.",
   image = "/seosharing.png", // Create this image (1200x630px recommended)
+  customBackground = false, // Default to false
+  backgroundColor = "#0a0b0c" // Default background color
 } = Astro.props;
 import { ClientRouter } from 'astro:transitions'
 ---
@@ -90,16 +94,14 @@ import { ClientRouter } from 'astro:transitions'
     <ClientRouter fallback="none" />
 
 
- 
-
-
 
   </head>
-  <body class="bg-[#0a0b0c] font-space-grotesk text-white">
-    <Background />
+  <body class={`font-space-grotesk text-white ${customBackground ? `bg-[${backgroundColor}]` : 'bg-[#0a0b0c]'}`}>
+    {!customBackground && <Background />}
+
     <Header />
     <slot />
     <Footer />
-    <ChatWidget/>
+    <ChatWidget />
   </body>
 </html>
