@@ -41,7 +41,7 @@ const founders = [
   import { sectionScrollAnimation, showCtaOnScroll } from '../gsapAnimations'
   sectionScrollAnimation('about', 'about-animation')
 </script>
-<Layout title="InnovaQuest | About">
+<Layout title="About">
   <main
     id="about"
     class="flex flex-col items-center justify-center min-h-screen h-fit pt-16 px-8 about"
@@ -49,15 +49,38 @@ const founders = [
     <SectionHeading animationClass="about-animation">Who We Are</SectionHeading>
 
     <div
-      class="flex flex-wrap lg:flex-nowrap lg:p-20 lg:mt-0 mt-4 justify-center items-center gap-10"
+      class="flex flex-col gap-10 lg:p-20 lg:mt-0 mt-4 justify-center items-center"
     >
-      <div class="flex-col gap-10 w-xl">
+      <div class="card-stack relative flex-col w-full max-w-xl">
         {
           founders.map((item, index) => (
-            <FounderInfoBlock founderInfo={item} index={index} />
+            <div class="founder-card" style={`--index: ${index};`}>
+              <FounderInfoBlock founderInfo={item} index={index} />
+            </div>
           ))
         }
       </div>
     </div>
   </main>
 </Layout>
+
+<style>
+  .card-stack {
+    position: relative;
+    width: 100%;
+    margin-top: 2rem;
+  }
+
+  .founder-card {
+    position: relative;
+    width: 100%;
+    margin-top: calc(var(--index) * 2rem); /* Creates gap between cards */
+    z-index: calc(3 - var(--index)); /* Ensures proper stacking order */
+    transition: transform 0.3s ease;
+  }
+
+  /* Optional: hover effect for interactivity */
+  .founder-card:hover {
+    transform: translateY(-8px);
+  }
+</style>
